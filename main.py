@@ -1,5 +1,6 @@
 import pygame
 import numpy as np
+from chess import ChessGame
 
 pygame.init()
 
@@ -43,6 +44,13 @@ piece_held = b'0'
 
 run = True
 
+chessGame = ChessGame(board)
+
+a_x = None
+a_y = None
+b_x = None
+b_y = None
+
 while run:
     pygame.time.delay(10)
 
@@ -54,18 +62,28 @@ while run:
         if event.type == pygame.QUIT:
             run = False
         if event.type == pygame.MOUSEBUTTONDOWN:
+            a_x = mouse_column
+            a_y = mouse_row
             piece_held = board[mouse_row, mouse_column]
-            board[mouse_row, mouse_column] = b'0'
         if event.type == pygame.MOUSEBUTTONUP:
-            if piece_held != b'0':
-                board[mouse_row, mouse_column] = piece_held
-                piece_held = b'0'
+            b_x = mouse_column
+            b_y = mouse_row
+            valid = chessGame.is_valid_move((a_x, a_y), (b_x, b_y))
+            print(f'Valid: {valid}')
+            if valid:
+                board[a_y, a_x] = b'0'
+                board[b_y, b_x] = piece_held
+            piece_held = b'0'
+            a_x = None
+            a_y = None
+            b_x = None
+            b_y = None
 
     win.blit(chessboard, (0,0))
 
     for i in range(8):
         for j in range(8):
-            if pieces[board[i, j]] is not None:
+            if pieces[board[i, j]] is not None and not (i == a_y and j == a_x):
                 win.blit(pieces[board[i, j]], (60*j, 60*i))
 
     if piece_held != b'0':
