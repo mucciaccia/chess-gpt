@@ -16,6 +16,11 @@ class ChessGame:
         ], dtype=np.character)
         self.move_number = 0
         self.white_turn = True
+        self.white_kingside_castling = True
+        self.white_queenside_castling = True
+        self.black_kingside_castling = True
+        self.black_queenside_castling = True
+        self.en_passant = []
         self.history = [self.board]
 
     def get_board(self):
@@ -267,7 +272,6 @@ class ChessGame:
 
     def is_in_check_mate(board, white):
         if ChessGame.is_in_check(board, white) == False:
-            print(f'Not in check')
             return False
         for i in range(0, 8):
             for j in range(0, 8):
@@ -279,7 +283,106 @@ class ChessGame:
                         return False
         return True
 
-    def is_valid_move(board, a, b, white_turn):
+    def is_castling_possible(self, a, b):
+        if a == (4, 0) and b == (0, 0):
+            kingside = False
+            white = True
+        elif a == (4, 0) and b == (7, 0):
+            kingside = True
+            white = True
+        elif a == (4, 7) and b == (0, 7):
+            kingside = False
+            white = False
+        elif a == (4, 7) and b == (7, 7):
+            kingside = True
+            white = False
+        else:
+            return False
+
+        board = self.board
+        if (kingside == True) and (white == True) and (self.white_kingside_castling == True):
+            return ChessGame.is_empty(board, (5, 0)) and ChessGame.is_empty(board, (6, 0))
+        elif (kingside == False) and (white == True) and (self.white_queenside_castling == True):
+            return ChessGame.is_empty(board, (1, 0)) and ChessGame.is_empty(board, (2, 0)) and ChessGame.is_empty(board, (3, 0))
+        elif (kingside == True) and (white == False) and (self.black_kingside_castling == True):
+            return ChessGame.is_empty(board, (5, 7)) and ChessGame.is_empty(board, (6, 7))
+        elif (kingside == False) and (white == False) and (self.black_queenside_castling == True):
+            return ChessGame.is_empty(board, (1, 7)) and ChessGame.is_empty(board, (2, 7)) and ChessGame.is_empty(board, (3, 7))
+        else:
+            return False
+        
+    def is_en_passant(self, a, b):
+        for x in self.en_passant:
+            if (x['a'] == a) and (x['b'] == b):
+                return True
+        return False
+        
+
+    def execute_castling(self, a, b):
+        copy = np.copy(self.board)
+        if a == (4, 0) and b == (0, 0):
+            copy[0, 0] = b'0'
+            copy[0, 1] = b'0'
+            copy[0, 2] = b'K'
+            copy[0, 3] = b'R'
+            copy[0, 4] = b'0'
+        elif a == (4, 0) and b == (7, 0):
+            copy[0, 4] = b'0'
+            copy[0, 5] = b'R'
+            copy[0, 6] = b'K'
+            copy[0, 7] = b'0'
+        elif a == (4, 7) and b == (0, 7):
+            copy[7, 0] = b'0'
+            copy[7, 1] = b'0'
+            copy[7, 2] = b'K'
+            copy[7, 3] = b'R'
+            copy[7, 4] = b'0'
+        elif a == (4, 7) and b == (7, 7):
+            copy[7, 4] = b'0'
+            copy[7, 5] = b'R'
+            copy[7, 6] = b'K'
+            copy[7, 7] = b'0'
+        return copy
+    
+    def update_castling(self, a):
+        if a == (0, 0):
+            self.white_queenside_castling = False
+        elif a == (7, 0):
+            self.white_kingside_castling = False
+        elif a == (4, 0):
+            self.white_kingside_castling = False
+            self.white_queenside_castling = False
+        elif a == (0, 7):
+            self.black_queenside_castling = False
+        elif a == (7, 7):
+            self.black_kingside_castling = False
+        elif a == (4, 7):
+            self.black_kingside_castling = False
+            self.black_queenside_castling = False
+        return
+    
+    def update_en_passant(self, a, b):
+        a_x, a_y = a
+        b_x, b_y = b
+        piece = self.board[b_y, b_x]
+        print('piece')
+        print(piece)
+        print(a)
+        print(b)
+        print(self.board[4, a_x + 1])
+        if (a_y == 1) and (b_y == 3) and (piece == b'P') and (self.board[3, a_x - 1] == b'p'):
+            self.en_passant.append({'a': (a_x - 1, 3), 'b': (a_x, 2), 'c': (b_x, b_y)})
+        if (a_y == 1) and (b_y == 3) and (piece == b'P') and (self.board[3, a_x + 1] == b'p'):
+            self.en_passant.append({'a': (a_x + 1, 3), 'b': (a_x, 2), 'c': (b_x, b_y)})
+        if (a_y == 6) and (b_y == 4) and (piece == b'p') and (self.board[4, a_x - 1] == b'P'):
+            self.en_passant.append({'a': (a_x - 1, 4), 'b': (a_x, 5), 'c': (b_x, b_y)})
+        if (a_y == 6) and (b_y == 4) and (piece == b'p') and (self.board[4, a_x + 1] == b'P'):
+            self.en_passant.append({'a': (a_x + 1, 4), 'b': (a_x, 5), 'c': (b_x, b_y)})
+        return
+
+    def is_valid_move(self, a, b):
+        board = self.board
+        white_turn = self.white_turn
         a_x, a_y = a
         b_x, b_y = b
 
@@ -291,7 +394,8 @@ class ChessGame:
             return False
 
         if (piece == b'K') and (b not in ChessGame.king_movements(board, a, white=True)):
-            return False
+            if (self.is_castling_possible(a, b) == False):
+                return False
         if (piece == b'Q') and (b not in ChessGame.queen_movements(board, a, white=True)):
             return False
         if (piece == b'R') and (b not in ChessGame.rook_movements(board, a, white=True)):
@@ -301,10 +405,12 @@ class ChessGame:
         if (piece == b'N') and (b not in ChessGame.horse_movements(board, a, white=True)):
             return False
         if (piece == b'P') and (b not in ChessGame.pawn_movements(board, a, white=True)):
-            return False
+            if (self.is_en_passant(a, b) == False):
+                return False
 
         if (piece == b'k') and (b not in ChessGame.king_movements(board, a, white=False)):
-            return False
+            if (self.is_castling_possible(a, b) == False):
+                return False
         if (piece == b'q') and (b not in ChessGame.queen_movements(board, a, white=False)):
             return False
         if (piece == b'r') and (b not in ChessGame.rook_movements(board, a, white=False)):
@@ -314,11 +420,15 @@ class ChessGame:
         if (piece == b'n') and (b not in ChessGame.horse_movements(board, a, white=False)):
             return False
         if (piece == b'p') and (b not in ChessGame.pawn_movements(board, a, white=False)):
-            return False
+            if (self.is_en_passant(a, b) == False):
+                return False
 
         board_after = np.copy(board)
-        board_after[a_y, a_x] = b'0'
-        board_after[b_y, b_x] = piece
+        if self.is_castling_possible(a, b) == True:
+            board_after = self.execute_castling(a, b)
+        else:
+            board_after[a_y, a_x] = b'0'
+            board_after[b_y, b_x] = piece
 
         if ChessGame.is_in_check(board_after, white=white_turn):
             return False
@@ -329,16 +439,26 @@ class ChessGame:
         a_x, a_y = a
         b_x, b_y = b
 
-        is_valid = ChessGame.is_valid_move(self.board, a, b, self.white_turn)
+        is_valid = self.is_valid_move(a, b)
 
-        print(f'Move {a} -> {b} is_valid: {is_valid}')
+        print(f'Move {a} -> {b}', end=' ')
+        if is_valid:
+            print(f'Valid!', end=' ')
+        else:
+            print(f'Not valid!')
 
         if is_valid == False:
             return self.board
 
-        piece = self.board[a_y, a_x]
-        self.board[a_y, a_x] = b'0'
-        self.board[b_y, b_x] = piece
+        if self.is_castling_possible(a, b) == True:
+            self.board = self.execute_castling(a, b)
+        else:
+            piece = self.board[a_y, a_x]
+            self.board[a_y, a_x] = b'0'
+            self.board[b_y, b_x] = piece
+
+        self.update_castling(a)
+        self.update_en_passant(a, b)
 
         copy = np.copy(self.board)
         self.history.append(copy)
@@ -349,7 +469,7 @@ class ChessGame:
             self.move_number += 1
             self.white_turn = True
 
-        print(f'Move number: {self.move_number}, white_turn: {self.white_turn}')
+        print(self.game_info())
 
         if ChessGame.is_in_check_mate(self.board, self.white_turn):
             print('Check Mate!!')
@@ -367,3 +487,31 @@ class ChessGame:
             return 1
         else:
             return 0
+
+    def game_info(self):
+        info = f'Move number: {self.move_number} / '
+        if self.white_turn == True:
+            info += 'White plays! / '
+        else:
+            info += 'Black plays! / '
+        
+        info += 'Castling: '
+        if self.white_kingside_castling == True:
+            info += 'K'
+        else:
+            info += '-'
+        if self.white_queenside_castling == True:
+            info += 'Q'
+        else:
+            info += '-'
+        if self.black_kingside_castling == True:
+            info += 'k'
+        else:
+            info += '-'
+        if self.black_queenside_castling == True:
+            info += 'q'
+        else:
+            info += '-'
+        info += ' / En passant: '
+        info += str(self.en_passant)
+        return info

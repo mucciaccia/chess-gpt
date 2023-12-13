@@ -64,7 +64,6 @@ while run:
             a_y = mouse_row
             piece_held = board[mouse_row, mouse_column]
 
-            print(f'Clicked {mouse_row}, {mouse_column}, piece_held: {piece_held}')
             if promotion is None:
                 piece_held = board[a_y, a_x]
                 piece_held_last_row = mouse_row
