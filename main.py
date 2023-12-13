@@ -50,7 +50,7 @@ while run:
 
     mouse_x, mouse_y = pygame.mouse.get_pos()
     mouse_column = mouse_x // 60
-    mouse_row = mouse_y // 60
+    mouse_row = 7 - mouse_y // 60
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -59,12 +59,14 @@ while run:
             a_x = mouse_column
             a_y = mouse_row
             piece_held = board[mouse_row, mouse_column]
+
+            print(f'Clicked {mouse_row}, {mouse_column}, piece_held: {piece_held}')
             if promotion is None:
                 piece_held = board[a_y, a_x]
                 piece_held_last_row = mouse_row
                 piece_held_last_column = mouse_column
-            elif promotion == mouse_column and mouse_row < 4:
-                board[0, promotion] = promotion_pieces[mouse_row]
+            elif promotion == mouse_column and mouse_row > 3:
+                board[7, promotion] = promotion_pieces[mouse_row]
                 piece_held = b'0'
                 promotion = None
             else:
@@ -89,7 +91,7 @@ while run:
     for i in range(8):
         for j in range(8):
             if pieces[board[i, j]] is not None and not (i == a_y and j == a_x):
-                win.blit(pieces[board[i, j]], (60*j, 60*i))
+                win.blit(pieces[board[i, j]], (60*j, 60*(7 - i)))
 
     if piece_held != b'0':
         win.blit(pieces[piece_held], (mouse_x - 30, mouse_y - 30))

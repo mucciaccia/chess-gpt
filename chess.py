@@ -125,7 +125,7 @@ class ChessGame:
 
         return move_list
     
-    def pawn_movements(board, coordinates, white=True):
+    def pawn_movements(board, coordinates, white):
         (x, y) = coordinates
         move_list = []
 
@@ -151,7 +151,7 @@ class ChessGame:
 
         return move_list
     
-    def king_movements(board, coordinates, white=True):
+    def king_movements(board, coordinates, white):
         (x, y) = coordinates
         move_list = []
 
@@ -171,6 +171,41 @@ class ChessGame:
                 move_list.append(move)
 
         return move_list
+    
+    def is_white(piece):
+        if (piece in [b'K', b'Q', b'R', b'B', b'N', b'P']):
+            return True
+        else:
+            return False
+
+    def is_black(piece):
+        if (piece in [b'k', b'q', b'r', b'b', b'n', b'p']):
+            return True
+        else:
+            return False
+
+    def any_piece_movements(board, coordinates, white):
+        x, y = coordinates
+        piece = board[y, x]
+
+        if white == True and ChessGame.is_white(piece) == False:
+            return []
+        if white == False and ChessGame.is_black(piece) == False:
+            return []
+        if (piece == b'K') or (piece == b'k'):
+            return ChessGame.king_movements(board, coordinates, white)
+        elif (piece == b'Q') or (piece == b'q'):
+            return ChessGame.queen_movements(board, coordinates, white)
+        elif (piece == b'R') or (piece == b'r'):
+            return ChessGame.rook_movements(board, coordinates, white)
+        elif (piece == b'B') or (piece == b'b'):
+            return ChessGame.bishop_movements(board, coordinates, white)
+        elif (piece == b'N') or (piece == b'n'):
+            return ChessGame.horse_movements(board, coordinates, white)
+        elif (piece == b'P') or (piece == b'p'):
+            return ChessGame.pawn_movements(board, coordinates, white)
+        else:
+            return []
 
     def is_atacked(board, coordinates, white):
         atacked = 0
@@ -219,7 +254,30 @@ class ChessGame:
             king_coordinates = ChessGame.find_piece(board, b'k')
         king_is_atacked = ChessGame.is_atacked(board, king_coordinates, white)
         return (king_is_atacked > 0)
+    
+    def is_move_blocked_by_check(board, a, b, white):
+        a_x, a_y = a
+        b_x, b_y = b
+        copy = np.copy(board)
+        piece = copy[a_y, a_x]
+        copy[a_y, a_x] = b'0'
+        copy[b_y, b_x] = piece
+        in_check = ChessGame.is_in_check(copy, white)
+        return in_check
 
+    def is_in_check_mate(board, white):
+        if ChessGame.is_in_check(board, white) == False:
+            print(f'Not in check')
+            return False
+        for i in range(0, 8):
+            for j in range(0, 8):
+                coordinates = (i, j)
+                moves = ChessGame.any_piece_movements(board, coordinates, white)
+                for move in moves:
+                    if ChessGame.is_move_blocked_by_check(board, coordinates, move, white) == False:
+                        print(f'{coordinates} -> {move}')
+                        return False
+        return True
 
     def is_valid_move(board, a, b, white_turn):
         a_x, a_y = a
@@ -292,5 +350,8 @@ class ChessGame:
             self.white_turn = True
 
         print(f'Move number: {self.move_number}, white_turn: {self.white_turn}')
+
+        if ChessGame.is_in_check_mate(self.board, self.white_turn):
+            print('Check Mate!!')
 
         return self.board
