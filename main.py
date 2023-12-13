@@ -30,30 +30,20 @@ for key in pieces:
     if pieces[key] is not None:
         pieces[key] = pygame.transform.smoothscale(pieces[key], (60, 60))
 
-board = np.matrix([
-    ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'],
-    ['P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'],
-    ['0', '0', '0', '0', '0', '0', '0', '0'],
-    ['0', '0', '0', '0', '0', '0', '0', '0'],
-    ['0', '0', '0', '0', '0', '0', '0', '0'],
-    ['0', '0', '0', '0', '0', '0', '0', '0'],
-    ['p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'],
-    ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r']
-], dtype=np.character)
 
 piece_held = b'0'
-
 promotion = None
 promotion_pieces = [b'q', b'r', b'b', b'n']
 
-run = True
-
-chessGame = ChessGame(board)
+chessGame = ChessGame()
+board = chessGame.get_board()
 
 a_x = None
 a_y = None
 b_x = None
 b_y = None
+
+run = True
 
 while run:
     pygame.time.delay(10)
@@ -70,10 +60,9 @@ while run:
             a_y = mouse_row
             piece_held = board[mouse_row, mouse_column]
             if promotion is None:
-                piece_held = board[mouse_row, mouse_column]
+                piece_held = board[a_y, a_x]
                 piece_held_last_row = mouse_row
                 piece_held_last_column = mouse_column
-                board[mouse_row, mouse_column] = b'0'
             elif promotion == mouse_column and mouse_row < 4:
                 board[0, promotion] = promotion_pieces[mouse_row]
                 piece_held = b'0'
@@ -88,12 +77,7 @@ while run:
             if piece_held == b'p' and mouse_row == 0:
                 promotion = mouse_column
                 promoted_piece = piece_held
-            elif piece_held != b'0':
-                board[mouse_row, mouse_column] = piece_held
-            valid = chessGame.is_valid_move((a_x, a_y), (b_x, b_y))
-            if valid:
-                board[a_y, a_x] = b'0'
-                board[b_y, b_x] = piece_held
+            board = chessGame.move((a_x, a_y), (b_x, b_y))
             piece_held = b'0'
             a_x = None
             a_y = None

@@ -3,129 +3,23 @@ import numpy as np
 
 class ChessGame:
 
-    player = 1
-
-    def __init__(self, board) -> None:      
-        self.board = board
-        self.white_playing = False
+    def __init__(self) -> None:      
+        self.board = np.matrix([
+            ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'],
+            ['P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'],
+            ['0', '0', '0', '0', '0', '0', '0', '0'],
+            ['0', '0', '0', '0', '0', '0', '0', '0'],
+            ['0', '0', '0', '0', '0', '0', '0', '0'],
+            ['0', '0', '0', '0', '0', '0', '0', '0'],
+            ['p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'],
+            ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r']
+        ], dtype=np.character)
+        self.move_number = 0
         self.white_turn = True
+        self.history = [self.board]
 
-    def is_valid_move(self, a, b):
-        a_x, a_y = a
-        b_x, b_y = b
-        print(f'Move ({a_x},{a_y}){self.board[a_y, a_x]} ({b_x},{b_y}){self.board[b_y, b_x]}')
-
-        is_empty_square = (self.board[b_y, b_x] == b'0')
-
-        is_valid = True
-
-        if (a_x, a_y) == (b_x, b_y):
-            is_valid = False
-
-        if b_x == a_x or b_y == a_y:
-            is_straight = True
-        else:
-            is_straight = False
-
-        if abs(b_x - a_x) == abs(b_y - a_y):
-            is_diagonal = True
-        else:
-            is_diagonal = False
-
-        if (b_x == a_x - 1 or b_x == a_x + 1) and (b_y == a_y - 2 or b_y == a_y + 2):
-            is_L = True
-        elif (b_x == a_x - 2 or b_x == a_x + 2) and (b_y == a_y - 1 or b_y == a_y + 1):
-            is_L = True
-        else:
-            is_L = False
-
-        if abs(b_x - a_x) == 1 and abs(b_y - a_y) == 1:
-            is_adjoining = True
-        elif abs(b_x - a_x) == 1 and abs(b_y - a_y) == 0:
-            is_adjoining = True
-        elif abs(b_x - a_x) == 0 and abs(b_y - a_y) == 1:
-            is_adjoining = True
-        else:
-            is_adjoining = False
-
-        if self.white_playing and self.white_turn and (b_y - a_y) < 0:
-            is_forward = True
-        elif not self.white_playing and not self.white_turn and (b_y - a_y) < 0:
-            is_forward = True
-        elif self.white_playing and not self.white_turn and (b_y - a_y) > 0:
-            is_forward = True
-        elif not self.white_playing and self.white_turn and (b_y - a_y) > 0:
-            is_forward = True
-        else:
-            is_forward = False
-
-        if a_y == 6 and b_y == 4:
-            is_double = True
-        elif a_y == 1 and b_y == 3:
-            is_double = True
-        else:
-            is_double = False
-
-        # Check if there are any pieces in the middle
-        if is_straight or is_diagonal:
-            d_x = 0
-            d_y = 0
-            if b_x != a_x:
-                d_x = (b_x - a_x) // abs(b_x - a_x)
-                d_n = abs(b_x - a_x)
-            if b_y != a_y:    
-                d_y = (b_y - a_y) // abs(b_y - a_y)
-                d_n = abs(b_y - a_y)
-            for i in range(1, d_n):
-                if self.board[a_y + i*d_y, a_x + i*d_x] != b'0':
-                    return False
-
-        piece = self.board[a_y, a_x]
-
-        if self.white_turn == True and piece in [b'p', b'q', b'k', b'b', b'n', b'r']:
-            is_valid = False
-
-        if self.white_turn == False and piece in [b'P', b'Q', b'K', b'B', b'N', b'R']:
-            is_valid = False
-
-        if self.white_turn == True and self.board[b_y, b_x] in [b'P', b'Q', b'K', b'B', b'N', b'R']:
-            is_valid = False
-
-        if self.white_turn == False and self.board[b_y, b_x] in [b'p', b'q', b'k', b'b', b'n', b'r']:
-            is_valid = False
-
-        if piece in [b'p', b'P']:
-            if not is_adjoining and not is_double:
-                is_valid = False
-            if not is_forward:
-                is_valid = False
-            if is_diagonal and is_empty_square:
-                is_valid = False
-            if is_straight and not is_empty_square:
-                is_valid = False
-
-        if piece in [b'k', b'K']:
-            if not is_adjoining:
-                is_valid = False
-
-        if piece in [b'q', b'Q']:
-            if not is_straight and not is_diagonal:
-                is_valid = False
-
-        if piece in [b'r', b'R']:
-            if not is_straight:
-                is_valid = False
-
-        if piece in [b'b', b'B']:
-            if not is_diagonal:
-                is_valid = False
-
-        if piece in [b'n', b'N']:
-            if not is_L:
-                is_valid = False
-
-        return is_valid
-
+    def get_board(self):
+        return self.board
 
     def find_piece(board, piece):
         for i in range(0, 8):
@@ -318,14 +212,82 @@ class ChessGame:
 
         return atacked
 
-    def is_in_check(self, board, white):
+    def is_in_check(board, white):
         if white == True:
             king_coordinates = ChessGame.find_piece(board, b'K')
         else:
             king_coordinates = ChessGame.find_piece(board, b'k')
-        print(f'king_coordinates : {king_coordinates}')
         king_is_atacked = ChessGame.is_atacked(board, king_coordinates, white)
-        print(f'king_is_atacked : {king_is_atacked}')
-        return king_is_atacked > 0
+        return (king_is_atacked > 0)
 
 
+    def is_valid_move(board, a, b, white_turn):
+        a_x, a_y = a
+        b_x, b_y = b
+
+        print(f'Move ({a_x},{a_y}){board[a_y, a_x]} ({b_x},{b_y}){board[b_y, b_x]}')
+
+        piece = board[a_y, a_x]
+
+        if (white_turn == True) and (piece in [b'k', b'q', b'r', b'b', b'n', b'p']):
+            return False
+        if (white_turn == False) and (piece in [b'K', b'Q', b'R', b'B', b'N', b'P']):
+            return False
+
+        if (piece == b'K') and (b not in ChessGame.king_movements(board, a, white=True)):
+            return False
+        if (piece == b'Q') and (b not in ChessGame.queen_movements(board, a, white=True)):
+            return False
+        if (piece == b'R') and (b not in ChessGame.rook_movements(board, a, white=True)):
+            return False
+        if (piece == b'B') and (b not in ChessGame.bishop_movements(board, a, white=True)):
+            return False
+        if (piece == b'N') and (b not in ChessGame.horse_movements(board, a, white=True)):
+            return False
+        if (piece == b'P') and (b not in ChessGame.pawn_movements(board, a, white=True)):
+            return False
+
+        if (piece == b'k') and (b not in ChessGame.king_movements(board, a, white=False)):
+            return False
+        if (piece == b'q') and (b not in ChessGame.queen_movements(board, a, white=False)):
+            return False
+        if (piece == b'r') and (b not in ChessGame.rook_movements(board, a, white=False)):
+            return False
+        if (piece == b'b') and (b not in ChessGame.bishop_movements(board, a, white=False)):
+            return False
+        if (piece == b'n') and (b not in ChessGame.horse_movements(board, a, white=False)):
+            return False
+        if (piece == b'p') and (b not in ChessGame.pawn_movements(board, a, white=False)):
+            return False
+
+        board_after = np.copy(board)
+        board_after[a_y, a_x] = b'0'
+        board_after[b_y, b_x] = piece
+
+        if ChessGame.is_in_check(board_after, white=False):
+            return False
+
+        return True
+    
+    def move(self, a, b):
+        is_valid = ChessGame.is_valid_move(self.board, a, b, self.white_turn)
+
+        if is_valid == False:
+            return self.board
+
+        a_x, a_y = a
+        b_x, b_y = b
+        piece = self.board[a_y, a_x]
+        self.board[a_y, a_x] = b'0'
+        self.board[b_y, b_x] = piece
+
+        copy = np.copy(self.board)
+        self.history.append(copy)
+
+        if self.white_turn == True:
+            self.white_turn = False
+        else:
+            self.move_number += 1
+            self.white_turn = True
+
+        return self.board
