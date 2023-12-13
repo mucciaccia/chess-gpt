@@ -225,8 +225,6 @@ class ChessGame:
         a_x, a_y = a
         b_x, b_y = b
 
-        print(f'Move ({a_x},{a_y}){board[a_y, a_x]} ({b_x},{b_y}){board[b_y, b_x]}')
-
         piece = board[a_y, a_x]
 
         if (white_turn == True) and (piece in [b'k', b'q', b'r', b'b', b'n', b'p']):
@@ -264,19 +262,22 @@ class ChessGame:
         board_after[a_y, a_x] = b'0'
         board_after[b_y, b_x] = piece
 
-        if ChessGame.is_in_check(board_after, white=False):
+        if ChessGame.is_in_check(board_after, white=white_turn):
             return False
 
         return True
     
     def move(self, a, b):
+        a_x, a_y = a
+        b_x, b_y = b
+
         is_valid = ChessGame.is_valid_move(self.board, a, b, self.white_turn)
+
+        print(f'Move {a} -> {b} is_valid: {is_valid}')
 
         if is_valid == False:
             return self.board
 
-        a_x, a_y = a
-        b_x, b_y = b
         piece = self.board[a_y, a_x]
         self.board[a_y, a_x] = b'0'
         self.board[b_y, b_x] = piece
@@ -289,5 +290,7 @@ class ChessGame:
         else:
             self.move_number += 1
             self.white_turn = True
+
+        print(f'Move number: {self.move_number}, white_turn: {self.white_turn}')
 
         return self.board
