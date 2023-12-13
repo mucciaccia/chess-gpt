@@ -355,3 +355,15 @@ class ChessGame:
             print('Check Mate!!')
 
         return self.board
+
+    def is_check_mate(self):
+        board = self.board
+        white = self.white_turn
+        check_mate = ChessGame.is_in_check_mate(board, white)
+
+        if (check_mate == True) and (white == True):
+            return -1
+        elif (check_mate == True) and (white == False):
+            return 1
+        else:
+            return 0

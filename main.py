@@ -3,8 +3,10 @@ import numpy as np
 from chess import ChessGame
 
 pygame.init()
-
-win = pygame.display.set_mode((640, 480))
+win = pygame.display.set_mode((1280, 720))
+font = pygame.font.Font(None, 36)
+text_white_won = font.render('Check mate! White won!', True, (255, 255, 255))
+text_black_won = font.render('Check mate! Black won!', True, (255, 255, 255))
 pygame.display.set_caption("Chess GPT")
 
 chessboard = pygame.image.load('./images/chessboard.svg')
@@ -45,6 +47,8 @@ b_y = None
 
 run = True
 
+result = 0
+
 while run:
     pygame.time.delay(10)
 
@@ -80,6 +84,7 @@ while run:
                 promotion = mouse_column
                 promoted_piece = piece_held
             board = chessGame.move((a_x, a_y), (b_x, b_y))
+            result = chessGame.is_check_mate()
             piece_held = b'0'
             a_x = None
             a_y = None
@@ -104,6 +109,11 @@ while run:
         win.blit(pieces[b'b'], (60 * promotion, 120))
         win.blit(pieces[b'n'], (60 * promotion, 180))
         win.blit(pieces[b'x'], (60 * promotion, 240))
+
+    if result == 1:
+        win.blit(text_white_won, (100, 540))
+    if result == -1:
+        win.blit(text_black_won, (100, 540))
 
     pygame.display.update()
 
