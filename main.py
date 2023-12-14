@@ -99,7 +99,7 @@ def mouse_down_promotion(board, piece_held, promotion, white, mouse_x, mouse_y):
             option += 1
         choosen_piece = promotion['pieces'][white][option]
         board = chessGame.move(piece_held['position_before'], piece_held['position_after'], choosen_piece)
-        white = chessGame.white_turn
+        white = chessGame.position.white_turn
         result = chessGame.is_check_mate()
         promotion['is_active'] = False
         piece_held['code'] = b'0'
@@ -134,7 +134,7 @@ while run:
 
             if promotion['is_active'] == False:
                 board = chessGame.move((a_x, a_y), (b_x, b_y))
-                white = chessGame.white_turn
+                white = chessGame.position.white_turn
                 result = chessGame.is_check_mate()
                 piece_held['code'] = b'0'
                 a_x = None
