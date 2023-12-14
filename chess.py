@@ -3,7 +3,7 @@ import numpy as np
 
 class ChessGame:
 
-    def __init__(self) -> None:      
+    def __init__(self) -> None:
         self.board = np.matrix([
             ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'],
             ['P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'],
@@ -279,11 +279,10 @@ class ChessGame:
                 moves = ChessGame.any_piece_movements(board, coordinates, white)
                 for move in moves:
                     if ChessGame.is_move_blocked_by_check(board, coordinates, move, white) == False:
-                        print(f'{coordinates} -> {move}')
                         return False
         return True
 
-    def is_castling_possible(self, a, b):
+    def is_castling(self, a, b):
         if a == (4, 0) and b == (0, 0):
             kingside = False
             white = True
@@ -310,14 +309,7 @@ class ChessGame:
             return ChessGame.is_empty(board, (1, 7)) and ChessGame.is_empty(board, (2, 7)) and ChessGame.is_empty(board, (3, 7))
         else:
             return False
-        
-    def is_en_passant(self, a, b):
-        for x in self.en_passant:
-            if (x['a'] == a) and (x['b'] == b):
-                return True
-        return False
-        
-
+      
     def execute_castling(self, a, b):
         copy = np.copy(self.board)
         if a == (4, 0) and b == (0, 0):
@@ -361,15 +353,16 @@ class ChessGame:
             self.black_queenside_castling = False
         return
     
+    def is_en_passant(self, a, b):
+        for x in self.en_passant:
+            if (x['a'] == a) and (x['b'] == b):
+                return True
+        return False
+
     def update_en_passant(self, a, b):
         a_x, a_y = a
         b_x, b_y = b
         piece = self.board[b_y, b_x]
-        print('piece')
-        print(piece)
-        print(a)
-        print(b)
-        print(self.board[4, a_x + 1])
         if (a_y == 1) and (b_y == 3) and (piece == b'P') and (self.board[3, a_x - 1] == b'p'):
             self.en_passant.append({'a': (a_x - 1, 3), 'b': (a_x, 2), 'c': (b_x, b_y)})
         if (a_y == 1) and (b_y == 3) and (piece == b'P') and (self.board[3, a_x + 1] == b'p'):
@@ -379,6 +372,36 @@ class ChessGame:
         if (a_y == 6) and (b_y == 4) and (piece == b'p') and (self.board[4, a_x + 1] == b'P'):
             self.en_passant.append({'a': (a_x + 1, 4), 'b': (a_x, 5), 'c': (b_x, b_y)})
         return
+    
+    def is_promotion(self, a, b):
+        a_x, a_y = a
+        b_x, b_y = b
+        piece = self.board[a_y, a_x]
+        if (piece == b'P') and (b_y == 7):
+            return True
+        if (piece == b'p') and (b_y == 0):
+            return True
+        return False
+
+    def execute_promotion(self, a, b, promotion_piece):
+        a_x, a_y = a
+        b_x, b_y = b
+        piece = self.board[a_y, a_x]
+        copy = np.copy(self.board)
+        if (piece == b'P') and (b_y == 7):
+            copy[a_y, a_x] = b'0'
+            if promotion_piece == 'q':
+                copy[b_y, b_x] = 'Q'
+            if promotion_piece == 'r':
+                copy[b_y, b_x] = 'R'
+            if promotion_piece == 'b':
+                copy[b_y, b_x] = 'B'
+            if promotion_piece == 'n':
+                copy[b_y, b_x] = 'N'
+        if (piece == b'p') and (b_y == 0):
+            copy[a_y, a_x] = b'0'
+            copy[b_y, b_x] = promotion_piece
+        return copy
 
     def is_valid_move(self, a, b):
         board = self.board
@@ -388,13 +411,15 @@ class ChessGame:
 
         piece = board[a_y, a_x]
 
+        if ChessGame.is_empty(board, a):
+            return False
         if (white_turn == True) and (piece in [b'k', b'q', b'r', b'b', b'n', b'p']):
             return False
         if (white_turn == False) and (piece in [b'K', b'Q', b'R', b'B', b'N', b'P']):
             return False
 
         if (piece == b'K') and (b not in ChessGame.king_movements(board, a, white=True)):
-            if (self.is_castling_possible(a, b) == False):
+            if (self.is_castling(a, b) == False):
                 return False
         if (piece == b'Q') and (b not in ChessGame.queen_movements(board, a, white=True)):
             return False
@@ -409,7 +434,7 @@ class ChessGame:
                 return False
 
         if (piece == b'k') and (b not in ChessGame.king_movements(board, a, white=False)):
-            if (self.is_castling_possible(a, b) == False):
+            if (self.is_castling(a, b) == False):
                 return False
         if (piece == b'q') and (b not in ChessGame.queen_movements(board, a, white=False)):
             return False
@@ -424,7 +449,7 @@ class ChessGame:
                 return False
 
         board_after = np.copy(board)
-        if self.is_castling_possible(a, b) == True:
+        if self.is_castling(a, b) == True:
             board_after = self.execute_castling(a, b)
         else:
             board_after[a_y, a_x] = b'0'
@@ -435,22 +460,21 @@ class ChessGame:
 
         return True
     
-    def move(self, a, b):
+    def move(self, a, b, promotion_piece = None):
         a_x, a_y = a
         b_x, b_y = b
 
         is_valid = self.is_valid_move(a, b)
 
-        print(f'Move {a} -> {b}', end=' ')
         if is_valid:
-            print(f'Valid!', end=' ')
-        else:
-            print(f'Not valid!')
+            print(f'Move {a} -> {b}', end=' ')
 
         if is_valid == False:
             return self.board
 
-        if self.is_castling_possible(a, b) == True:
+        if self.is_promotion(a, b):
+            self.board = self.execute_promotion(a, b, promotion_piece)
+        elif self.is_castling(a, b) == True:
             self.board = self.execute_castling(a, b)
         else:
             piece = self.board[a_y, a_x]
