@@ -26,10 +26,17 @@ class ChessPosition:
 
     def get_board(self):
         return self.board
-    
+
+    def is_on_board(self, coordinates):
+        (x, y) = coordinates
+        return (x >= 0) and (x < 8) and (y >= 0) and (y < 8)
+
     def get_piece(self, coordinates):
         x, y = coordinates
-        return self.board[y, x]
+        if self.is_on_board(coordinates):
+            return self.board[y, x]
+        else:
+            return None
 
     def set_piece(self, coordinates, piece):
         x, y = coordinates
@@ -42,10 +49,6 @@ class ChessPosition:
                 if self.board[i, j] == piece:
                     return (j, i)
         return None
-
-    def is_on_board(self, coordinates):
-        (x, y) = coordinates
-        return (x >= 0) and (x < 8) and (y >= 0) and (y < 8)
 
     def is_empty(self, coordinates):
         if not self.is_on_board(coordinates):

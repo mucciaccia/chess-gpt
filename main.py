@@ -116,7 +116,7 @@ while run:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             run = False
-        if event.type == pygame.MOUSEBUTTONDOWN:
+        if (event.type == pygame.MOUSEBUTTONDOWN) and (event.button == 1):
             a_x = mouse_column
             a_y = mouse_row
 
@@ -126,7 +126,7 @@ while run:
                 piece_held['code'] = board[a_y, a_x]
                 piece_held['position_before'] = (a_x, a_y)
 
-        if event.type == pygame.MOUSEBUTTONUP:
+        if (event.type == pygame.MOUSEBUTTONUP) and (event.button == 1):
             b_x = mouse_column
             b_y = mouse_row
             piece_held['position_after'] = (b_x, b_y)
