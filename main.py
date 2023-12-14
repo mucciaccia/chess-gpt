@@ -33,9 +33,23 @@ for key in pieces:
         pieces[key] = pygame.transform.smoothscale(pieces[key], (60, 60))
 
 
-piece_held = b'0'
-promotion = None
-promotion_pieces = [b'q', b'r', b'b', b'n']
+piece_held = {
+    'code': b'0',
+    'position_before': (-1, -1),
+    'position_after': (-1, -1),
+
+}
+
+promotion = {
+    'is_active': False,
+    'column': 0,
+    'top': True,
+    'choosen_piece': b'0',
+    'pieces': {
+        False: [b'x', b'n', b'b', b'r', b'q'],
+        True: [b'Q', b'R', b'B', b'N', b'x']
+    }
+}
 
 chessGame = ChessGame()
 board = chessGame.get_board()
@@ -45,9 +59,52 @@ a_y = None
 b_x = None
 b_y = None
 
+white = True
+result = 0
 run = True
 
-result = 0
+def update_promotion(piece_held, promotion, white, move):
+    b_x, b_y = move
+
+    if (piece_held['code'] == b'p') and (b_y == 0) and (white == False):
+        promotion['is_active'] = True
+        promotion['column'] = b_x
+        promotion['top'] = False
+        piece_held['code'] = b'0'
+    elif (piece_held['code'] == b'P') and (b_y == 7) and (white == True):
+        promotion['is_active'] = True
+        promotion['column'] = b_x
+        promotion['top'] = True
+        piece_held['code'] = b'0'
+
+    return promotion
+
+def mouse_down_promotion(board, piece_held, promotion, white, mouse_x, mouse_y):
+    x_min = 60 * promotion['column']
+    x_max = 60 * promotion['column'] + 60
+    if promotion['top'] == True:
+        y_min = 0
+        y_max = 4 * 60
+    else:
+        y_min = 4 * 60
+        y_max = 8 * 60
+
+    if (mouse_x < x_min) or (mouse_x > x_max) or (mouse_y < y_min) or (mouse_y > y_max):
+        promotion['is_active'] = False
+        piece_held['code'] = b'0'
+        result = 0
+    else:
+        option = (mouse_y - y_min) // 60
+        if white == False:
+            option += 1
+        choosen_piece = promotion['pieces'][white][option]
+        board = chessGame.move(piece_held['position_before'], piece_held['position_after'], choosen_piece)
+        white = chessGame.white_turn
+        result = chessGame.is_check_mate()
+        promotion['is_active'] = False
+        piece_held['code'] = b'0'
+
+    return board, result, white
 
 while run:
     pygame.time.delay(10)
@@ -62,33 +119,28 @@ while run:
         if event.type == pygame.MOUSEBUTTONDOWN:
             a_x = mouse_column
             a_y = mouse_row
-            piece_held = board[mouse_row, mouse_column]
 
-            if promotion is None:
-                piece_held = board[a_y, a_x]
-                piece_held_last_row = mouse_row
-                piece_held_last_column = mouse_column
-            elif promotion == mouse_column and mouse_row > 3:
-                board[7, promotion] = promotion_pieces[mouse_row]
-                piece_held = b'0'
-                promotion = None
+            if promotion['is_active']:
+                board, result, white = mouse_down_promotion(board, piece_held, promotion, white, mouse_x, mouse_y)
             else:
-                promotion = None
-                board[piece_held_last_row, piece_held_last_column] = promoted_piece
+                piece_held['code'] = board[a_y, a_x]
+                piece_held['position_before'] = (a_x, a_y)
 
         if event.type == pygame.MOUSEBUTTONUP:
             b_x = mouse_column
             b_y = mouse_row
-            if piece_held == b'p' and mouse_row == 0:
-                promotion = mouse_column
-                promoted_piece = piece_held
-            board = chessGame.move((a_x, a_y), (b_x, b_y))
-            result = chessGame.is_check_mate()
-            piece_held = b'0'
-            a_x = None
-            a_y = None
-            b_x = None
-            b_y = None
+            piece_held['position_after'] = (b_x, b_y)
+            promotion = update_promotion(piece_held, promotion, white, (b_x, b_y))
+
+            if promotion['is_active'] == False:
+                board = chessGame.move((a_x, a_y), (b_x, b_y))
+                white = chessGame.white_turn
+                result = chessGame.is_check_mate()
+                piece_held['code'] = b'0'
+                a_x = None
+                a_y = None
+                b_x = None
+                b_y = None
 
     win.blit(chessboard, (0,0))
 
@@ -97,17 +149,21 @@ while run:
             if pieces[board[i, j]] is not None and not (i == a_y and j == a_x):
                 win.blit(pieces[board[i, j]], (60*j, 60*(7 - i)))
 
-    if piece_held != b'0':
-        win.blit(pieces[piece_held], (mouse_x - 30, mouse_y - 30))
+    if piece_held['code'] != b'0':
+        win.blit(pieces[piece_held['code']], (mouse_x - 30, mouse_y - 30))
 
-    if promotion is not None:
+    if promotion['is_active'] == True:
         color = (255,255,255)
-        pygame.draw.rect(win, color, pygame.Rect(60*promotion, 0, 60, 300))
-        win.blit(pieces[b'q'], (60 * promotion, 0))
-        win.blit(pieces[b'r'], (60 * promotion, 60))
-        win.blit(pieces[b'b'], (60 * promotion, 120))
-        win.blit(pieces[b'n'], (60 * promotion, 180))
-        win.blit(pieces[b'x'], (60 * promotion, 240))
+        if promotion['top'] == True:
+            y_min = 0
+        else:
+            y_min = 3 * 60
+        pygame.draw.rect(win, color, pygame.Rect(60*promotion['column'], y_min, 60, 300))
+        win.blit(pieces[promotion['pieces'][white][0]], (60 * promotion['column'], y_min + 0))
+        win.blit(pieces[promotion['pieces'][white][1]], (60 * promotion['column'], y_min + 60))
+        win.blit(pieces[promotion['pieces'][white][2]], (60 * promotion['column'], y_min + 120))
+        win.blit(pieces[promotion['pieces'][white][3]], (60 * promotion['column'], y_min + 180))
+        win.blit(pieces[promotion['pieces'][white][4]], (60 * promotion['column'], y_min + 240))
 
     if result == 1:
         win.blit(text_white_won, (100, 540))

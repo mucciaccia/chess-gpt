@@ -6,12 +6,12 @@ class ChessGame:
     def __init__(self) -> None:
         self.board = np.matrix([
             ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'],
-            ['P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'],
+            ['P', 'P', 'P', 'P', 'P', 'P', 'p', 'P'],
             ['0', '0', '0', '0', '0', '0', '0', '0'],
             ['0', '0', '0', '0', '0', '0', '0', '0'],
             ['0', '0', '0', '0', '0', '0', '0', '0'],
             ['0', '0', '0', '0', '0', '0', '0', '0'],
-            ['p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'],
+            ['p', 'p', 'p', 'p', 'p', 'p', 'P', 'p'],
             ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r']
         ], dtype=np.character)
         self.move_number = 0
@@ -390,14 +390,7 @@ class ChessGame:
         copy = np.copy(self.board)
         if (piece == b'P') and (b_y == 7):
             copy[a_y, a_x] = b'0'
-            if promotion_piece == 'q':
-                copy[b_y, b_x] = 'Q'
-            if promotion_piece == 'r':
-                copy[b_y, b_x] = 'R'
-            if promotion_piece == 'b':
-                copy[b_y, b_x] = 'B'
-            if promotion_piece == 'n':
-                copy[b_y, b_x] = 'N'
+            copy[b_y, b_x] = promotion_piece
         if (piece == b'p') and (b_y == 0):
             copy[a_y, a_x] = b'0'
             copy[b_y, b_x] = promotion_piece
@@ -467,10 +460,12 @@ class ChessGame:
         is_valid = self.is_valid_move(a, b)
 
         if is_valid:
-            print(f'Move {a} -> {b}', end=' ')
-
-        if is_valid == False:
+            print(f'Move {a} -> {b} /', end=' ')
+        else:
             return self.board
+
+        if promotion_piece is not None:
+            print(f'Promotion: {promotion_piece} /', end=' ')
 
         if self.is_promotion(a, b):
             self.board = self.execute_promotion(a, b, promotion_piece)
