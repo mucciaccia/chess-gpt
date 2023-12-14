@@ -352,9 +352,9 @@ class ChessGame:
 
         if position.is_empty(a):
             return False
-        if (white_turn == True) and (piece in [b'k', b'q', b'r', b'b', b'n', b'p']):
+        if (white_turn == True) and ChessGame.is_black(piece):
             return False
-        if (white_turn == False) and (piece in [b'K', b'Q', b'R', b'B', b'N', b'P']):
+        if (white_turn == False) and ChessGame.is_white(piece):
             return False
 
         if (piece == b'K') and (b not in ChessGame.king_movements(position, a, white=True)):
