@@ -3,15 +3,18 @@ import numpy as np
 from chess import ChessGame
 
 pygame.init()
-win = pygame.display.set_mode((480, 480))
+
+square_size = 90
+screen_size = (8 * square_size, 8 * square_size)
+win = pygame.display.set_mode(screen_size)
 font = pygame.font.Font(None, 36)
 text_white_won = font.render('Check mate! White won!', True, (255, 255, 255))
 text_black_won = font.render('Check mate! Black won!', True, (255, 255, 255))
 pygame.display.set_caption("Chess GPT")
 
 chessboard = pygame.image.load('./images/chessboard.svg')
-
-square_size = 60
+chessboard = pygame.transform.scale(chessboard, screen_size)
+chessboard = pygame.transform.flip(chessboard, False, True)
 
 pieces = {}
 pieces[b'0'] = None
@@ -30,8 +33,10 @@ pieces[b'N'] = pygame.image.load('./images/white_knight.svg')
 pieces[b'P'] = pygame.image.load('./images/white_pawn.svg')
 for key in pieces:
     if pieces[key] is not None:
-        pieces[key] = pygame.transform.smoothscale(pieces[key], (60, 60))
+        pieces[key] = pygame.transform.smoothscale(pieces[key], (square_size, square_size))
 
+
+pygame.display.set_icon(pieces[b'k'])
 
 piece_held = {
     'code': b'0',
@@ -80,21 +85,21 @@ def update_promotion(piece_held, promotion, white, move):
     return promotion
 
 def mouse_down_promotion(board, piece_held, promotion, white, mouse_x, mouse_y):
-    x_min = 60 * promotion['column']
-    x_max = 60 * promotion['column'] + 60
+    x_min = square_size * promotion['column']
+    x_max = square_size * promotion['column'] + square_size
     if promotion['top'] == True:
         y_min = 0
-        y_max = 4 * 60
+        y_max = 4 * square_size
     else:
-        y_min = 4 * 60
-        y_max = 8 * 60
+        y_min = 4 * square_size
+        y_max = 8 * square_size
 
     if (mouse_x < x_min) or (mouse_x > x_max) or (mouse_y < y_min) or (mouse_y > y_max):
         promotion['is_active'] = False
         piece_held['code'] = b'0'
         result = 0
     else:
-        option = (mouse_y - y_min) // 60
+        option = (mouse_y - y_min) // square_size
         if white == False:
             option += 1
         choosen_piece = promotion['pieces'][white][option]
@@ -110,8 +115,8 @@ while run:
     pygame.time.delay(10)
 
     mouse_x, mouse_y = pygame.mouse.get_pos()
-    mouse_column = mouse_x // 60
-    mouse_row = 7 - mouse_y // 60
+    mouse_column = mouse_x // square_size
+    mouse_row = 7 - mouse_y // square_size
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -147,7 +152,7 @@ while run:
     for i in range(8):
         for j in range(8):
             if pieces[board[i, j]] is not None and not (i == a_y and j == a_x):
-                win.blit(pieces[board[i, j]], (60*j, 60*(7 - i)))
+                win.blit(pieces[board[i, j]], (square_size*j, square_size*(7 - i)))
 
     if piece_held['code'] != b'0':
         win.blit(pieces[piece_held['code']], (mouse_x - 30, mouse_y - 30))
@@ -157,13 +162,13 @@ while run:
         if promotion['top'] == True:
             y_min = 0
         else:
-            y_min = 3 * 60
-        pygame.draw.rect(win, color, pygame.Rect(60*promotion['column'], y_min, 60, 300))
-        win.blit(pieces[promotion['pieces'][white][0]], (60 * promotion['column'], y_min + 0))
-        win.blit(pieces[promotion['pieces'][white][1]], (60 * promotion['column'], y_min + 60))
-        win.blit(pieces[promotion['pieces'][white][2]], (60 * promotion['column'], y_min + 120))
-        win.blit(pieces[promotion['pieces'][white][3]], (60 * promotion['column'], y_min + 180))
-        win.blit(pieces[promotion['pieces'][white][4]], (60 * promotion['column'], y_min + 240))
+            y_min = 3 * square_size
+        pygame.draw.rect(win, color, pygame.Rect(square_size*promotion['column'], y_min, square_size, 300))
+        win.blit(pieces[promotion['pieces'][white][0]], (square_size * promotion['column'], y_min + 0))
+        win.blit(pieces[promotion['pieces'][white][1]], (square_size * promotion['column'], y_min + square_size))
+        win.blit(pieces[promotion['pieces'][white][2]], (square_size * promotion['column'], y_min + 120))
+        win.blit(pieces[promotion['pieces'][white][3]], (square_size * promotion['column'], y_min + 180))
+        win.blit(pieces[promotion['pieces'][white][4]], (square_size * promotion['column'], y_min + 240))
 
     if result == 1:
         win.blit(text_white_won, (100, 540))

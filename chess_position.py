@@ -12,7 +12,7 @@ class ChessPosition:
             ['0', '0', '0', '0', '0', '0', '0', '0'],
             ['0', '0', '0', '0', '0', '0', '0', '0'],
             ['p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'],
-            ['r', 'n', 'b', 'q', 'k', '0', '0', 'r']
+            ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r']
         ], dtype=np.character)
         self.white_turn = True
         self.move_number = 0

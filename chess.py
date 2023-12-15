@@ -213,8 +213,6 @@ class ChessGame:
         else:
             king_coordinates = position.find_piece(b'k')
 
-        print(position.board)
-
         king_is_atacked = ChessGame.is_atacked(position, king_coordinates, white)
         return (king_is_atacked > 0)
     
@@ -458,20 +456,18 @@ class ChessGame:
     def move(self, a, b, promotion_piece = None):
         is_valid = self.is_valid_move(a, b, promotion_piece)
 
-        if is_valid:
-            print(f'Move {self.to_long_algebraic_notation(a, b)} /', end=' ')
-            print(f'Move {self.from_long_algebraic_notation(self.to_long_algebraic_notation(a, b))} /', end=' ')
-        else:
+        if is_valid == False:
             return self.position.board
-
-        if promotion_piece is not None:
-            print(f'Promotion: {promotion_piece} /', end=' ')
 
         self.position = self.execute_move(a, b, promotion_piece)
 
-        copy = np.copy(self.position.board)
+        copy = self.position.copy()
         self.history.append(copy)
 
+        print(f'Move {self.to_long_algebraic_notation(a, b)} /', end=' ')
+        print(f'Move {self.from_long_algebraic_notation(self.to_long_algebraic_notation(a, b))} /', end=' ')
+        if promotion_piece is not None:
+            print(f'Promotion: {promotion_piece} /', end=' ')
         print(self.game_info())
 
         if self.is_check_mate() != 0:
