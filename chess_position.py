@@ -102,14 +102,57 @@ class ChessPosition:
         copy_position.board[b_y, b_x] = piece
         return copy_position
 
-    def info(self):
-        info = ''
+    def to_FEN_notation(self):
+        fen_str = '\n'
+        for i in reversed(range(0, 8)):
+            for j in range(0, 8):
+                fen_str += self.get_piece((j, i)).decode('utf-8')
+            fen_str += '\n'
+
         if self.white_turn == True:
-            info += 'White plays! / '
+            fen_str += ' w '
         else:
-            info += 'Black plays! / '
-        
-        info += 'Castling: '
+            fen_str += ' b '
+
+        fen_str += self.castling_string()
+        fen_str += ' - '
+        fen_str += str(int(self.white_turn))
+        fen_str += ' 1'
+
+        return fen_str
+
+    def to_FEN_notation_2(self):
+        fen_str = ''
+        n_empty = 0
+        for i in reversed(range(0, 8)):
+            for j in range(0, 8):
+                if self.get_piece((j, i)) == b'0':
+                    n_empty += 1
+                else:
+                    if n_empty > 0:
+                        fen_str += str(n_empty)
+                        n_empty = 0
+                    fen_str += self.get_piece((j, i)).decode('utf-8')
+            if n_empty > 0:
+                fen_str += str(n_empty)
+                n_empty = 0
+            if i != 0:
+                fen_str += '/'
+
+        if self.white_turn == True:
+            fen_str += ' w '
+        else:
+            fen_str += ' b '
+
+        fen_str += self.castling_string()
+        fen_str += ' - '
+        fen_str += str(int(self.white_turn))
+        fen_str += ' 1'
+
+        return fen_str
+
+    def castling_string(self):
+        info = ''
         if self.white_kingside_castling == True:
             info += 'K'
         else:
@@ -126,6 +169,18 @@ class ChessPosition:
             info += 'q'
         else:
             info += '-'
+        return info
+
+    def info(self):
+        info = ''
+        if self.white_turn == True:
+            info += 'White plays! / '
+        else:
+            info += 'Black plays! / '
+        
+        info += 'Castling: '
+        info += self.castling_string()
+
         info += ' / En passant: '
         info += str(self.en_passant)
         return info

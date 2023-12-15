@@ -1,5 +1,6 @@
 import numpy as np
 from chess_position import ChessPosition
+from gpt_api import GptApi
 
 class ChessGame:
 
@@ -7,6 +8,7 @@ class ChessGame:
         self.position = ChessPosition()
         self.move_number = 0
         self.history = [self.position]
+        self.move_history = []
 
     def is_white(piece):
         if (piece in [b'K', b'Q', b'R', b'B', b'N', b'P']):
@@ -402,7 +404,8 @@ class ChessGame:
         is_valid = self.is_valid_move(a, b)
 
         if is_valid:
-            print(f'Move {a} -> {b} /', end=' ')
+            print(f'Move {self.to_long_algebraic_notation(a, b)} /', end=' ')
+            print(f'Move {self.from_long_algebraic_notation(self.to_long_algebraic_notation(a, b))} /', end=' ')
         else:
             return self.position.board
 
@@ -436,8 +439,51 @@ class ChessGame:
             print('Check Mate!!')
 
         return self.position.board
+    
+    def move_2_players(self, a, b, promotion_piece = None):
+
+        valid = self.is_valid_move(a, b)
+        if valid == True:
+            self.move_history.append(self.to_long_algebraic_notation(a, b))
+        else:
+            return self.move(a, b, promotion_piece)    
+        self.move(a, b, promotion_piece)
+        fen_str = self.position.to_FEN_notation()
+        print(f'FEN: {self.position.to_FEN_notation()}')
+
+        valid = False
+        while valid == False:
+            text = GptApi.move("\n".join(self.move_history))
+            (a, b) = self.from_long_algebraic_notation(text)
+            valid = self.is_valid_move(a, b)
+        self.move_history.append(self.to_long_algebraic_notation(a, b))
+        self.move(a, b)
+        return self.position.board
+
+    def to_long_algebraic_notation(self, a, b):
+        a_x, a_y = a
+        b_x, b_y = b
+        move_str = ''
+        move_str += chr(a_x + 97)
+        move_str += str(a_y + 1)
+        move_str += '-'
+        move_str += chr(b_x + 97)
+        move_str += str(b_y + 1)
+        return move_str
+
+    def from_long_algebraic_notation(self, move_str):
+        move_str = move_str.lower()
+
+        a_x = ord(move_str[0]) - 97
+        a_y = ord(move_str[1]) - 49
+
+        b_x = ord(move_str[3]) - 97
+        b_y = ord(move_str[4]) - 49
+
+        return [(a_x, a_y), (b_x, b_y)]
 
     def game_info(self):
         info = f'Move number: {self.move_number} / '
         info += self.position.info()
         return info
+    
