@@ -213,6 +213,8 @@ class ChessGame:
         else:
             king_coordinates = position.find_piece(b'k')
 
+        print(position.board)
+
         king_is_atacked = ChessGame.is_atacked(position, king_coordinates, white)
         return (king_is_atacked > 0)
     
@@ -242,35 +244,33 @@ class ChessGame:
             return 0
 
     def castling_info(a, b):
-        if a == (4, 0) and b in [(0, 0), (1, 0), (2, 0)]:
+        if (a == (4, 0)) and (b in [(0, 0), (1, 0), (2, 0)]):
             kingside = False
             white = True
-        elif a == (4, 0) and b in [(7, 0), (6,0)]:
+            is_castling_attempt = True
+        elif (a == (4, 0)) and (b in [(7, 0), (6,0)]):
             kingside = True
             white = True
-        elif a == (4, 7) and b in [(0, 7), (1, 7), (2, 7)]:
+            is_castling_attempt = True
+        elif (a == (4, 7)) and (b in [(0, 7), (1, 7), (2, 7)]):
             kingside = False
             white = False
-        elif a == (4, 7) and b in [(7, 7), (6, 7)]:
+            is_castling_attempt = True
+        elif (a == (4, 7)) and (b in [(7, 7), (6, 7)]):
             kingside = True
             white = False
+            is_castling_attempt = True
+        else:
+            kingside = None
+            white = None
+            is_castling_attempt = False
 
-        return kingside, white
+        return kingside, white, is_castling_attempt
 
     def is_castling(self, a, b):
-        if a == (4, 0) and b in [(0, 0), (1, 0), (2, 0)]:
-            kingside = False
-            white = True
-        elif a == (4, 0) and b in [(7, 0), (6,0)]:
-            kingside = True
-            white = True
-        elif a == (4, 7) and b in [(0, 7), (1, 7), (2, 7)]:
-            kingside = False
-            white = False
-        elif a == (4, 7) and b in [(7, 7), (6, 7)]:
-            kingside = True
-            white = False
-        else:
+
+        kingside, white, is_castling_attempt = ChessGame.castling_info(a, b)
+        if is_castling_attempt == False:
             return False
 
         position = self.position
@@ -286,56 +286,52 @@ class ChessGame:
             return False
       
     def execute_castling(self, a, b):
+        new_position = self.position.copy()
 
-        kingside, white = ChessGame.castling_info(a, b)
+        kingside, white, _ = ChessGame.castling_info(a, b)
 
-        copy = np.copy(self.position.board)
         if (kingside == False) and (white == True):
-            copy[0, 0] = b'0'
-            copy[0, 1] = b'0'
-            copy[0, 2] = b'K'
-            copy[0, 3] = b'R'
-            copy[0, 4] = b'0'
+            new_position.board[0, 0] = b'0'
+            new_position.board[0, 1] = b'0'
+            new_position.board[0, 2] = b'K'
+            new_position.board[0, 3] = b'R'
+            new_position.board[0, 4] = b'0'
         elif (kingside == True) and (white == True):
-            copy[0, 4] = b'0'
-            copy[0, 5] = b'R'
-            copy[0, 6] = b'K'
-            copy[0, 7] = b'0'
+            new_position.board[0, 4] = b'0'
+            new_position.board[0, 5] = b'R'
+            new_position.board[0, 6] = b'K'
+            new_position.board[0, 7] = b'0'
         elif (kingside == False) and (white == False):
-            copy[7, 0] = b'0'
-            copy[7, 1] = b'0'
-            copy[7, 2] = b'K'
-            copy[7, 3] = b'R'
-            copy[7, 4] = b'0'
+            new_position.board[7, 0] = b'0'
+            new_position.board[7, 1] = b'0'
+            new_position.board[7, 2] = b'k'
+            new_position.board[7, 3] = b'r'
+            new_position.board[7, 4] = b'0'
         elif (kingside == True) and (white == False):
-            copy[7, 4] = b'0'
-            copy[7, 5] = b'R'
-            copy[7, 6] = b'K'
-            copy[7, 7] = b'0'
-        position = ChessPosition()
-        position.board = copy
-        return position
+            new_position.board[7, 4] = b'0'
+            new_position.board[7, 5] = b'r'
+            new_position.board[7, 6] = b'k'
+            new_position.board[7, 7] = b'0'
+        return new_position
     
-    def update_castling(self, a):
-        if a == (0, 0):
-            self.position.white_queenside_castling = False
-        elif a == (7, 0):
-            self.position.white_kingside_castling = False
+    def update_castling(position, a, b):
+        if (a == (0, 0)) or (b == (0, 0)):
+            position.white_queenside_castling = False
+        elif a == (7, 0) or (b == (7, 0)):
+            position.white_kingside_castling = False
         elif a == (4, 0):
-            self.position.white_kingside_castling = False
-            self.position.white_queenside_castling = False
-        elif a == (0, 7):
-            self.position.black_queenside_castling = False
-        elif a == (7, 7):
-            self.position.black_kingside_castling = False
+            position.white_kingside_castling = False
+            position.white_queenside_castling = False
+        elif a == (0, 7) or (b == (0, 7)):
+            position.black_queenside_castling = False
+        elif a == (7, 7) or (b == (7, 7)):
+            position.black_kingside_castling = False
         elif a == (4, 7):
-            self.position.black_kingside_castling = False
-            self.position.black_queenside_castling = False
+            position.black_kingside_castling = False
+            position.black_queenside_castling = False
         return
     
     def is_en_passant(self, a, b):
-
-        print('Tem que entrar aqui')
 
         a_x, a_y = a
         b_x, b_y = b
@@ -344,17 +340,10 @@ class ChessGame:
         piece2 = self.position.get_piece((b_x, a_y))
         en_passant = self.position.en_passant
 
-        print(a)
-        print(b)
-        print(piece1)
-        print(piece2)
-
         if (piece1 == b'P') and (piece2 == b'p') and (a_y == 4) and (b_y == 5) and (abs(a_x - b_x) == 1) and (b_x == en_passant):
-            print('chegoualajsld')
             return True
 
         if (piece1 == b'p') and (piece2 == b'P') and (a_y == 3) and (b_y == 2) and (abs(a_x - b_x) == 1) and (b_x == en_passant):
-            print('chegoualajsld')
             return True
 
         return False
@@ -367,17 +356,17 @@ class ChessGame:
         new_position.en_passant = None
         return new_position
 
-    def update_en_passant(self, a, b):
+    def update_en_passant(position, a, b):
         _, a_y = a
         b_x, b_y = b
-        piece = self.position.get_piece(b)
+        piece = position.get_piece(b)
 
         if (a_y == 1) and (b_y == 3) and (piece == b'P'):
-            self.position.en_passant = b_x
+            position.en_passant = b_x
         elif (a_y == 6) and (b_y == 4) and (piece == b'p'):
-            self.position.en_passant = b_x
+            position.en_passant = b_x
         else:
-            self.position.en_passant = None
+            position.en_passant = None
         return
 
     def is_promotion(self, a, b):
@@ -391,19 +380,32 @@ class ChessGame:
         return False
 
     def execute_promotion(self, a, b, promotion_piece):
-        a_x, a_y = a
-        b_x, b_y = b
-        piece = self.position.get_piece(a)
-        copy = np.copy(self.position.board)
-        if (piece == b'P') and (b_y == 7):
-            copy[a_y, a_x] = b'0'
-            copy[b_y, b_x] = promotion_piece
-        if (piece == b'p') and (b_y == 0):
-            copy[a_y, a_x] = b'0'
-            copy[b_y, b_x] = promotion_piece
-        return copy
+        new_position = self.position.unrestricted_move(a, b, promotion_piece)
+        return new_position
 
-    def is_valid_move(self, a, b):
+    def execute_move(self, a, b, promotion_piece):
+        new_position = self.position.copy()
+        if self.is_promotion(a, b):
+            new_position = self.execute_promotion(a, b, promotion_piece)
+        elif self.is_castling(a, b):
+            new_position = self.execute_castling(a, b)
+        elif self.is_en_passant(a, b):
+            new_position = self.execute_en_passant(a, b)
+        else:
+            new_position = self.position.unrestricted_move(a, b)
+
+        ChessGame.update_castling(new_position, a, b)
+        ChessGame.update_en_passant(new_position, a, b)
+
+        if self.position.white_turn == True:
+            new_position.white_turn = False
+        else:
+            new_position.move_number += 1
+            new_position.white_turn = True
+
+        return new_position
+
+    def is_valid_move(self, a, b, promotion_piece):
         position = self.position
         white_turn = self.position.white_turn
 
@@ -446,11 +448,7 @@ class ChessGame:
             if (self.is_en_passant(a, b) == False):
                 return False
 
-        position_after = self.position.copy()
-        if self.is_castling(a, b) == True:
-            position_after = self.execute_castling(a, b)
-        else:
-            position_after = self.position.unrestricted_move(a, b)
+        position_after = self.execute_move(a, b, promotion_piece)
 
         if ChessGame.is_in_check(position_after, white=white_turn):
             return False
@@ -458,7 +456,7 @@ class ChessGame:
         return True
     
     def move(self, a, b, promotion_piece = None):
-        is_valid = self.is_valid_move(a, b)
+        is_valid = self.is_valid_move(a, b, promotion_piece)
 
         if is_valid:
             print(f'Move {self.to_long_algebraic_notation(a, b)} /', end=' ')
@@ -469,26 +467,10 @@ class ChessGame:
         if promotion_piece is not None:
             print(f'Promotion: {promotion_piece} /', end=' ')
 
-        if self.is_promotion(a, b):
-            self.position.board = self.execute_promotion(a, b, promotion_piece)
-        elif self.is_castling(a, b):
-            self.position.board = self.execute_castling(a, b)
-        elif self.is_en_passant(a, b):
-            self.position = self.execute_en_passant(a, b)
-        else:
-            self.position = self.position.unrestricted_move(a, b)
-
-        self.update_castling(a)
-        self.update_en_passant(a, b)
+        self.position = self.execute_move(a, b, promotion_piece)
 
         copy = np.copy(self.position.board)
         self.history.append(copy)
-
-        if self.position.white_turn == True:
-            self.position.white_turn = False
-        else:
-            self.move_number += 1
-            self.position.white_turn = True
 
         print(self.game_info())
 

@@ -12,9 +12,10 @@ class ChessPosition:
             ['0', '0', '0', '0', '0', '0', '0', '0'],
             ['0', '0', '0', '0', '0', '0', '0', '0'],
             ['p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'],
-            ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r']
+            ['r', 'n', 'b', 'q', 'k', '0', '0', 'r']
         ], dtype=np.character)
         self.white_turn = True
+        self.move_number = 0
         self.white_kingside_castling = True
         self.white_queenside_castling = True
         self.black_kingside_castling = True
@@ -99,7 +100,7 @@ class ChessPosition:
         else:
             return False
         
-    def unrestricted_move(self, a, b):
+    def unrestricted_move(self, a, b, promotion_piece=None):
         a_x, a_y = a
         b_x, b_y = b
 
