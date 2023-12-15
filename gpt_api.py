@@ -29,13 +29,19 @@ class GptApi:
         response = requests.post(url, headers=headers, json=data)
         return response.json()
     
-    def move(fen_str):
+    def move(fen_str, move_history_str, possible_moves_str):
         # Example usage
-        prompt = "We are playing chess, this is the history of the moves:\n"
+        prompt = "We are playing chess, this is board represented in FEN notation:\n"
         prompt += fen_str
-        prompt += "\n"
+        prompt += "This are the possible moves on this position:\n"
+        prompt += possible_moves_str
         prompt += "Please make your next move. Send me only the move in long algebraic notation (example a2-d4).\n"
+        print(f'Prompt:\n{prompt}')
         response = GptApi.call_gpt_api(prompt)
         text = response['choices'][0]['message']['content'] 
-        print(text)
+        print('==================================================================')
+        print('==================================================================')
+        print(f'Chat gpt:\n{text}')
+        print('==================================================================')
+        print('==================================================================')
         return text

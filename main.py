@@ -113,7 +113,7 @@ def mouse_down_promotion(board, piece_held, promotion, white, mouse_x, mouse_y):
 
 while run:
     pygame.time.delay(10)
-
+ 
     mouse_x, mouse_y = pygame.mouse.get_pos()
     mouse_column = mouse_x // square_size
     mouse_row = 7 - mouse_y // square_size
@@ -163,17 +163,18 @@ while run:
             y_min = 0
         else:
             y_min = 3 * square_size
-        pygame.draw.rect(win, color, pygame.Rect(square_size*promotion['column'], y_min, square_size, 300))
+        pygame.draw.rect(win, color, pygame.Rect(square_size*promotion['column'], y_min, square_size, 5*square_size))
         win.blit(pieces[promotion['pieces'][white][0]], (square_size * promotion['column'], y_min + 0))
         win.blit(pieces[promotion['pieces'][white][1]], (square_size * promotion['column'], y_min + square_size))
-        win.blit(pieces[promotion['pieces'][white][2]], (square_size * promotion['column'], y_min + 120))
-        win.blit(pieces[promotion['pieces'][white][3]], (square_size * promotion['column'], y_min + 180))
-        win.blit(pieces[promotion['pieces'][white][4]], (square_size * promotion['column'], y_min + 240))
+        win.blit(pieces[promotion['pieces'][white][2]], (square_size * promotion['column'], y_min + 2*square_size))
+        win.blit(pieces[promotion['pieces'][white][3]], (square_size * promotion['column'], y_min + 3*square_size))
+        win.blit(pieces[promotion['pieces'][white][4]], (square_size * promotion['column'], y_min + 4*square_size))
 
     if result == 1:
-        win.blit(text_white_won, (100, 540))
+        pygame.draw.rect(win, (0,0,0), pygame.Rect(square_size * 2, square_size * 3, square_size * 4, square_size * 2))
+        win.blit(text_white_won, (square_size * 2.5, square_size * 3.8))
     if result == -1:
-        win.blit(text_black_won, (100, 540))
+        win.blit(text_black_won, (square_size * 2.5, square_size * 3.8))
 
     pygame.display.update()
 

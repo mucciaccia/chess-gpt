@@ -9,6 +9,7 @@ class ChessGame:
         self.move_number = 0
         self.history = [self.position]
         self.move_history = []
+        self.gpt_mode = False
 
     def is_white(piece):
         if (piece in [b'K', b'Q', b'R', b'B', b'N', b'P']):
@@ -452,8 +453,17 @@ class ChessGame:
             return False
 
         return True
-    
-    def move(self, a, b, promotion_piece = None):
+
+    def move_info(self, a, b, promotion_piece = None):
+        info = ''
+        info += f'Move {self.to_long_algebraic_notation(a, b)} / '
+        if promotion_piece is not None:
+            info += f'Promotion: {promotion_piece} / '
+        info += f'Move number: {self.move_number} / '
+        info += self.position.info()
+        return info
+
+    def player_move(self, a, b, promotion_piece = None):
         is_valid = self.is_valid_move(a, b, promotion_piece)
 
         if is_valid == False:
@@ -463,36 +473,45 @@ class ChessGame:
 
         copy = self.position.copy()
         self.history.append(copy)
+        self.move_history.append(self.to_long_algebraic_notation(a, b))
 
-        print(f'Move {self.to_long_algebraic_notation(a, b)} /', end=' ')
-        print(f'Move {self.from_long_algebraic_notation(self.to_long_algebraic_notation(a, b))} /', end=' ')
-        if promotion_piece is not None:
-            print(f'Promotion: {promotion_piece} /', end=' ')
-        print(self.game_info())
+        print(self.move_info(a, b, promotion_piece))
 
         if self.is_check_mate() != 0:
             print('Check Mate!!')
 
         return self.position.board
     
-    def move_2_players(self, a, b, promotion_piece = None):
+    def gpt_move(self):
 
-        valid = self.is_valid_move(a, b)
-        if valid == True:
-            self.move_history.append(self.to_long_algebraic_notation(a, b))
-        else:
-            return self.move(a, b, promotion_piece)    
-        self.move(a, b, promotion_piece)
         fen_str = self.position.to_FEN_notation()
-        print(f'FEN: {self.position.to_FEN_notation()}')
+        move_history_str = "\n".join(self.move_history)
+        possible_moves_str = ""
+        for move in ChessGame.possible_moves(self.position):
+            a, b = move
+            possible_moves_str += self.to_long_algebraic_notation(a, b)
+            possible_moves_str += "\n"
 
         valid = False
-        while valid == False:
-            text = GptApi.move("\n".join(self.move_history))
-            (a, b) = self.from_long_algebraic_notation(text)
-            valid = self.is_valid_move(a, b)
-        self.move_history.append(self.to_long_algebraic_notation(a, b))
-        self.move(a, b)
+        attempts = 3
+        while (valid == False) and (attempts > 0):
+            move_text = GptApi.move(fen_str, move_history_str, possible_moves_str)
+            (a, b) = self.from_long_algebraic_notation(move_text)
+            valid = self.is_valid_move(a, b, promotion_piece='q')
+            attempts -= 1
+        if valid == True:
+            self.player_move(a, b)
+        else:
+            print('Chat GPT made an invalid movement!')
+        return self.position.board
+
+    def move(self, a, b, promotion_piece = None):
+
+        self.player_move(a, b, promotion_piece)
+
+        if self.gpt_mode == True:
+            self.gpt_move()
+        
         return self.position.board
 
     def to_long_algebraic_notation(self, a, b):
@@ -515,10 +534,4 @@ class ChessGame:
         b_x = ord(move_str[3]) - 97
         b_y = ord(move_str[4]) - 49
 
-        return [(a_x, a_y), (b_x, b_y)]
-
-    def game_info(self):
-        info = f'Move number: {self.move_number} / '
-        info += self.position.info()
-        return info
-    
+        return [(a_x, a_y), (b_x, b_y)]   

@@ -107,11 +107,14 @@ class ChessPosition:
         copy_position = copy.deepcopy(self)
         piece = copy_position.get_piece(a)
         copy_position.board[a_y, a_x] = b'0'
-        copy_position.board[b_y, b_x] = piece
+        if promotion_piece is None:
+            copy_position.board[b_y, b_x] = piece
+        else:
+            copy_position.board[b_y, b_x] = promotion_piece
         return copy_position
 
     def to_FEN_notation(self):
-        fen_str = '\n'
+        fen_str = ''
         for i in reversed(range(0, 8)):
             for j in range(0, 8):
                 fen_str += self.get_piece((j, i)).decode('utf-8')
@@ -126,7 +129,7 @@ class ChessPosition:
         fen_str += ' - '
         fen_str += str(int(self.white_turn))
         fen_str += ' 1'
-
+        fen_str += '\n'
         return fen_str
 
     def to_FEN_notation_2(self):
