@@ -19,7 +19,7 @@ class ChessPosition:
         self.white_queenside_castling = True
         self.black_kingside_castling = True
         self.black_queenside_castling = True
-        self.en_passant = []
+        self.en_passant = None
 
     def copy(self):
         return copy.deepcopy(self)
@@ -42,6 +42,13 @@ class ChessPosition:
         x, y = coordinates
         self.board[y, x] = piece
         return
+
+    def remove_piece(self, coordinates):
+        new_position = self.copy()
+        if new_position.is_on_board(coordinates):
+            x, y = coordinates
+            new_position.board[y, x] = b'0'
+        return new_position
 
     def find_piece(self, piece):
         for i in range(0, 8):

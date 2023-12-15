@@ -157,6 +157,16 @@ class ChessGame:
         else:
             return []
 
+    def possible_moves(position: ChessPosition):
+        all_moves = []
+        for i in range(0, 8):
+            for j in range(0, 8):
+                moves = ChessGame.any_piece_movements(position, (i, j), position.white_turn)
+                for k in moves:
+                    all_moves.append(((i, j), k))
+
+        return all_moves
+
     def is_atacked(position : ChessPosition, coordinates, white):
         atacked = 0
 
@@ -202,6 +212,7 @@ class ChessGame:
             king_coordinates = position.find_piece(b'K')
         else:
             king_coordinates = position.find_piece(b'k')
+
         king_is_atacked = ChessGame.is_atacked(position, king_coordinates, white)
         return (king_is_atacked > 0)
     
@@ -230,17 +241,33 @@ class ChessGame:
         else:
             return 0
 
-    def is_castling(self, a, b):
-        if a == (4, 0) and b == (0, 0):
+    def castling_info(a, b):
+        if a == (4, 0) and b in [(0, 0), (1, 0), (2, 0)]:
             kingside = False
             white = True
-        elif a == (4, 0) and b == (7, 0):
+        elif a == (4, 0) and b in [(7, 0), (6,0)]:
             kingside = True
             white = True
-        elif a == (4, 7) and b == (0, 7):
+        elif a == (4, 7) and b in [(0, 7), (1, 7), (2, 7)]:
             kingside = False
             white = False
-        elif a == (4, 7) and b == (7, 7):
+        elif a == (4, 7) and b in [(7, 7), (6, 7)]:
+            kingside = True
+            white = False
+
+        return kingside, white
+
+    def is_castling(self, a, b):
+        if a == (4, 0) and b in [(0, 0), (1, 0), (2, 0)]:
+            kingside = False
+            white = True
+        elif a == (4, 0) and b in [(7, 0), (6,0)]:
+            kingside = True
+            white = True
+        elif a == (4, 7) and b in [(0, 7), (1, 7), (2, 7)]:
+            kingside = False
+            white = False
+        elif a == (4, 7) and b in [(7, 7), (6, 7)]:
             kingside = True
             white = False
         else:
@@ -259,25 +286,28 @@ class ChessGame:
             return False
       
     def execute_castling(self, a, b):
+
+        kingside, white = ChessGame.castling_info(a, b)
+
         copy = np.copy(self.position.board)
-        if a == (4, 0) and b == (0, 0):
+        if (kingside == False) and (white == True):
             copy[0, 0] = b'0'
             copy[0, 1] = b'0'
             copy[0, 2] = b'K'
             copy[0, 3] = b'R'
             copy[0, 4] = b'0'
-        elif a == (4, 0) and b == (7, 0):
+        elif (kingside == True) and (white == True):
             copy[0, 4] = b'0'
             copy[0, 5] = b'R'
             copy[0, 6] = b'K'
             copy[0, 7] = b'0'
-        elif a == (4, 7) and b == (0, 7):
+        elif (kingside == False) and (white == False):
             copy[7, 0] = b'0'
             copy[7, 1] = b'0'
             copy[7, 2] = b'K'
             copy[7, 3] = b'R'
             copy[7, 4] = b'0'
-        elif a == (4, 7) and b == (7, 7):
+        elif (kingside == True) and (white == False):
             copy[7, 4] = b'0'
             copy[7, 5] = b'R'
             copy[7, 6] = b'K'
@@ -304,25 +334,52 @@ class ChessGame:
         return
     
     def is_en_passant(self, a, b):
-        for x in self.position.en_passant:
-            if (x['a'] == a) and (x['b'] == b):
-                return True
-        return False
 
-    def update_en_passant(self, a, b):
+        print('Tem que entrar aqui')
+
         a_x, a_y = a
         b_x, b_y = b
+        
+        piece1 = self.position.get_piece(a)
+        piece2 = self.position.get_piece((b_x, a_y))
+        en_passant = self.position.en_passant
+
+        print(a)
+        print(b)
+        print(piece1)
+        print(piece2)
+
+        if (piece1 == b'P') and (piece2 == b'p') and (a_y == 4) and (b_y == 5) and (abs(a_x - b_x) == 1) and (b_x == en_passant):
+            print('chegoualajsld')
+            return True
+
+        if (piece1 == b'p') and (piece2 == b'P') and (a_y == 3) and (b_y == 2) and (abs(a_x - b_x) == 1) and (b_x == en_passant):
+            print('chegoualajsld')
+            return True
+
+        return False
+
+    def execute_en_passant(self, a, b):
+        _, a_y = a
+        b_x, _ = b
+        new_position = self.position.remove_piece((b_x, a_y))
+        new_position = new_position.unrestricted_move(a, b)
+        new_position.en_passant = None
+        return new_position
+
+    def update_en_passant(self, a, b):
+        _, a_y = a
+        b_x, b_y = b
         piece = self.position.get_piece(b)
-        if (a_y == 1) and (b_y == 3) and (piece == b'P') and (self.position.get_piece((a_x - 1, 3)) == b'p'):
-            self.position.en_passant.append({'a': (a_x - 1, 3), 'b': (a_x, 2), 'c': (b_x, b_y)})
-        if (a_y == 1) and (b_y == 3) and (piece == b'P') and (self.position.get_piece((a_x + 1, 3)) == b'p'):
-            self.position.en_passant.append({'a': (a_x + 1, 3), 'b': (a_x, 2), 'c': (b_x, b_y)})
-        if (a_y == 6) and (b_y == 4) and (piece == b'p') and (self.position.get_piece((a_x - 1, 4)) == b'P'):
-            self.position.en_passant.append({'a': (a_x - 1, 4), 'b': (a_x, 5), 'c': (b_x, b_y)})
-        if (a_y == 6) and (b_y == 4) and (piece == b'p') and (self.position.get_piece((a_x + 1, 4)) == b'P'):
-            self.position.en_passant.append({'a': (a_x + 1, 4), 'b': (a_x, 5), 'c': (b_x, b_y)})
+
+        if (a_y == 1) and (b_y == 3) and (piece == b'P'):
+            self.position.en_passant = b_x
+        elif (a_y == 6) and (b_y == 4) and (piece == b'p'):
+            self.position.en_passant = b_x
+        else:
+            self.position.en_passant = None
         return
-    
+
     def is_promotion(self, a, b):
         a_x, a_y = a
         _, b_y = b
@@ -414,12 +471,12 @@ class ChessGame:
 
         if self.is_promotion(a, b):
             self.position.board = self.execute_promotion(a, b, promotion_piece)
-        elif self.is_castling(a, b) == True:
+        elif self.is_castling(a, b):
             self.position.board = self.execute_castling(a, b)
+        elif self.is_en_passant(a, b):
+            self.position = self.execute_en_passant(a, b)
         else:
-            piece = self.position.get_piece(a)
-            self.position.set_piece(a, b'0')
-            self.position.set_piece(b, piece)
+            self.position = self.position.unrestricted_move(a, b)
 
         self.update_castling(a)
         self.update_en_passant(a, b)
