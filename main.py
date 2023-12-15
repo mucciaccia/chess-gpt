@@ -118,6 +118,11 @@ while run:
     mouse_column = mouse_x // square_size
     mouse_row = 7 - mouse_y // square_size
 
+    if (promotion['is_active'] == False) and (chessGame.gpt_mode == True) and (chessGame.position.white_turn != chessGame.player_white):
+        board = chessGame.gpt_move()
+        white = chessGame.position.white_turn
+        result = chessGame.is_check_mate()
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             run = False

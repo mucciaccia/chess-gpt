@@ -9,7 +9,8 @@ class ChessGame:
         self.move_number = 0
         self.history = [self.position]
         self.move_history = []
-        self.gpt_mode = False
+        self.player_white = True
+        self.gpt_mode = True
 
     def is_white(piece):
         if (piece in [b'K', b'Q', b'R', b'B', b'N', b'P']):
@@ -163,8 +164,10 @@ class ChessGame:
         for i in range(0, 8):
             for j in range(0, 8):
                 moves = ChessGame.any_piece_movements(position, (i, j), position.white_turn)
-                for k in moves:
-                    all_moves.append(((i, j), k))
+                for b in moves:
+                    a = (i, j)
+                    if not ChessGame.is_move_blocked_by_check(position, a, b):
+                        all_moves.append((a, b))
 
         return all_moves
 
@@ -217,9 +220,9 @@ class ChessGame:
         king_is_atacked = ChessGame.is_atacked(position, king_coordinates, white)
         return (king_is_atacked > 0)
     
-    def is_move_blocked_by_check(position : ChessPosition, a, b, white):
+    def is_move_blocked_by_check(position : ChessPosition, a, b):
         copy = position.unrestricted_move(a, b)
-        in_check = ChessGame.is_in_check(copy, white)
+        in_check = ChessGame.is_in_check(copy, position.white_turn)
         return in_check
 
     def is_check_mate(self):
@@ -232,7 +235,7 @@ class ChessGame:
                 coordinates = (i, j)
                 moves = ChessGame.any_piece_movements(position, coordinates, white)
                 for move in moves:
-                    if ChessGame.is_move_blocked_by_check(position, coordinates, move, white) == False:
+                    if ChessGame.is_move_blocked_by_check(position, coordinates, move) == False:
                         return 0
                     
         if white == True:
@@ -507,9 +510,9 @@ class ChessGame:
 
     def move(self, a, b, promotion_piece = None):
 
-        self.player_move(a, b, promotion_piece)
-
-        if self.gpt_mode == True:
+        if self.position.white_turn == self.player_white:
+            self.player_move(a, b, promotion_piece)
+        else:
             self.gpt_move()
         
         return self.position.board
