@@ -19,18 +19,18 @@ chessboard = pygame.transform.flip(chessboard, False, True)
 pieces = {}
 pieces[b'0'] = None
 pieces[b'x'] = pygame.image.load('./images/cancel.svg')
-pieces[b'k'] = pygame.image.load('./images/black_king.svg')
-pieces[b'q'] = pygame.image.load('./images/black_queen.svg')
-pieces[b'r'] = pygame.image.load('./images/black_rook.svg')
-pieces[b'b'] = pygame.image.load('./images/black_bishop.svg')
-pieces[b'n'] = pygame.image.load('./images/black_knight.svg')
-pieces[b'p'] = pygame.image.load('./images/black_pawn.svg')
-pieces[b'K'] = pygame.image.load('./images/white_king.svg')
-pieces[b'Q'] = pygame.image.load('./images/white_queen.svg')
-pieces[b'R'] = pygame.image.load('./images/white_rook.svg')
-pieces[b'B'] = pygame.image.load('./images/white_bishop.svg')
-pieces[b'N'] = pygame.image.load('./images/white_knight.svg')
-pieces[b'P'] = pygame.image.load('./images/white_pawn.svg')
+pieces[b'k'] = pygame.image.load('./images/theme_gpt/black_king.png')
+pieces[b'q'] = pygame.image.load('./images/theme_gpt/black_queen.png')
+pieces[b'r'] = pygame.image.load('./images/theme_gpt/black_rook.png')
+pieces[b'b'] = pygame.image.load('./images/theme_gpt/black_bishop.png')
+pieces[b'n'] = pygame.image.load('./images/theme_gpt/black_knight.png')
+pieces[b'p'] = pygame.image.load('./images/theme_gpt/black_pawn.png')
+pieces[b'K'] = pygame.image.load('./images/theme_gpt/white_king.png')
+pieces[b'Q'] = pygame.image.load('./images/theme_gpt/white_queen.png')
+pieces[b'R'] = pygame.image.load('./images/theme_gpt/white_rook.png')
+pieces[b'B'] = pygame.image.load('./images/theme_gpt/white_bishop.png')
+pieces[b'N'] = pygame.image.load('./images/theme_gpt/white_knight.png')
+pieces[b'P'] = pygame.image.load('./images/theme_gpt/white_pawn.png')
 for key in pieces:
     if pieces[key] is not None:
         pieces[key] = pygame.transform.smoothscale(pieces[key], (square_size, square_size))
@@ -118,7 +118,7 @@ while run:
     mouse_column = mouse_x // square_size
     mouse_row = 7 - mouse_y // square_size
 
-    if (promotion['is_active'] == False) and (chessGame.gpt_mode == True) and (chessGame.position.white_turn != chessGame.player_white):
+    if (result == 0) and (promotion['is_active'] == False) and (chessGame.gpt_mode == True) and (chessGame.position.white_turn != chessGame.player_white):
         board = chessGame.gpt_move()
         white = chessGame.position.white_turn
         result = chessGame.is_check_mate()
