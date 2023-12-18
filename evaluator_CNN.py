@@ -11,48 +11,32 @@ import matplotlib.pyplot as plt
 
 evalReader = EvalReader()
 
-x_train, y_train = evalReader.get_n(10000)
-x_test, y_test = evalReader.get_n(100)
+x_train, y_train = evalReader.get_cnn(1000)
+x_test, y_test = evalReader.get_cnn(100)
 
-class MLPChessEvaluator(nn.Module):
+class CNNChessEvaluator(nn.Module):
   def __init__(self):
     super().__init__()
 
     self.net = nn.Sequential(
-      nn.Conv2d(in_channels=12, out_channels=20, kernel_size=(8, 8)),
+      nn.Conv2d(in_channels=12, out_channels=12, padding = 4, kernel_size=(8, 8)),
       nn.ReLU(),
-      nn.Conv2d(in_channels=12, out_channels=20, kernel_size=(8, 8)),
+      nn.Conv2d(in_channels=12, out_channels=12, padding = 4, kernel_size=(8, 8)),
       nn.ReLU(),
-      nn.Linear(in_features=1024, out_features=512),
-      nn.ReLU(),
-      nn.Linear(in_features=512, out_features=256),
-      nn.ReLU(),
-      nn.Linear(in_features=256, out_features=128),
-      nn.ReLU(),
-      nn.Linear(in_features=128, out_features=64),
-      nn.ReLU(),
-      nn.Linear(in_features=64, out_features=32),
-      nn.ReLU(),
-      nn.Linear(in_features=32, out_features=16),
-      nn.ReLU(),
-      nn.Linear(in_features=16, out_features=8),
-      nn.ReLU(),
-      nn.Linear(in_features=8, out_features=4),
-      nn.ReLU(),
-      nn.Linear(in_features=4, out_features=2),
-      nn.ReLU(),
-      nn.Linear(in_features=2, out_features=1)
+      nn.Flatten(),
+      nn.Linear(1200, 1)
     )
 
   def forward(self, x: torch.Tensor) -> torch.Tensor:
-    return self.net(x).squeeze()
+    out = self.net(x).squeeze()
+    return out
 
 train_loss_values = []
 test_loss_values = []
 epoch_count = []
 
 def train():
-  model_0 = MLPChessEvaluator()
+  model_0 = CNNChessEvaluator()
   loss_fn = nn.MSELoss()
   optimizer = torch.optim.Adam(params=model_0.parameters(), lr=0.01, weight_decay=1e-5)
 
@@ -79,13 +63,12 @@ def train():
         test_loss = loss_fn(test_pred, y_test)        
 
         epoch_count.append(epoch)
-        #train_loss_values.append(mae_train)
-        #test_loss_values.append(mae_test)
+        train_loss_values.append(loss.item())
+        test_loss_values.append(test_loss.item())
 
         if epoch % 10 == 0:
             print(f"Epoch: {epoch} | MAE Train Loss: {loss} | MAE Test Loss: {test_loss}")
   return model_0
 
 #model = train()
-
-#torch.save(model, './models/MLP.torch')
+#torch.save(model, './models/CNN.torch')

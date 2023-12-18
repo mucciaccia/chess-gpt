@@ -9,52 +9,6 @@ class EvalReader():
     def __del__(self):
         self.file.close()
 
-    def get_eval(self):
-        line = self.file.readline()
-        line_json = json.loads(line)
-
-        fen_str = line_json['fen']
-        eval = line_json['evals'][0]['pvs'][0]['cp']
-        return (fen_str, eval)
-
-    def get_eval_batch(self, batch_size):
-        line = self.file.readline()
-        line_json = json.loads(line)
-
-        result = []
-        n = batch_size
-        while n > 0:
-            fen_str = line_json['fen']
-            eval = line_json['evals'][0]['pvs'][0]['cp']
-            result.append(fen_str, eval)
-        return result
-    
-    def get_eval_batch(self, train_size, test_size):
-        line = self.file.readline()
-        line_json = json.loads(line)
-
-        train_x = []
-        train_y = []
-        n = train_size
-        while n > 0:
-            fen_str = line_json['fen']
-            eval = line_json['evals'][0]['pvs'][0]['cp']
-            train_x.append(fen_str)
-            train_y.append(eval)
-            n -= 1
-
-        test_x = []
-        test_y = []
-        n = test_size
-        while n > 0:
-            fen_str = line_json['fen']
-            eval = line_json['evals'][0]['pvs'][0]['cp']
-            test_x.append(fen_str)
-            test_y.append(eval)
-            n -= 1
-
-        return train_x, train_y, test_x, test_y
-
     def piece_to_dimension(piece):
         dim = {
             'K': 0,
@@ -70,7 +24,6 @@ class EvalReader():
             'n': 10,
             'p': 11
         }
-
         return dim[piece]
 
     def fen_to_tensor(fen_str):
@@ -90,11 +43,10 @@ class EvalReader():
                 d = EvalReader.piece_to_dimension(c)
                 tensor[i, j, d] = 1
                 j += 1
-        return tensor.reshape([768]).squeeze()
+        return tensor
     
     def get_n(self, n : int):
-        x = torch.zeros(10, 768)
-        y = x = torch.zeros(n)
+        y = torch.zeros(n)
 
         tensor_list = []
         i = 0
@@ -112,13 +64,40 @@ class EvalReader():
                 else:
                     eval = -1000
 
-            tensor_list.append(EvalReader.fen_to_tensor(fen_str))
+            tensor = EvalReader.fen_to_tensor(fen_str)
+            tensor_list.append(tensor.reshape([768]).squeeze())
             y[i] = torch.tensor(eval)
             i += 1
 
         x = torch.stack(tensor_list)
         return x, y
         
+    def get_cnn(self, n : int):
+        y = torch.zeros(n)
+
+        tensor_list = []
+        i = 0
+        while i < n:
+            line = self.file.readline()
+            line_json = json.loads(line)
+
+            fen_str = line_json['fen']
+            eval = line_json['evals'][0]['pvs'][0].get('cp')
+
+            if eval is None:
+                mate = line_json['evals'][0]['pvs'][0]['mate']
+                if mate > 0:
+                    eval = 1000
+                else:
+                    eval = -1000
+
+            tensor = EvalReader.fen_to_tensor(fen_str).permute(2, 0, 1).squeeze()
+            tensor_list.append(tensor)
+            y[i] = torch.tensor(eval)
+            i += 1
+
+        x = torch.stack(tensor_list)
+        return x, y
 
         
 

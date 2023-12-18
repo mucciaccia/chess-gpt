@@ -1,6 +1,12 @@
 import pygame
 import numpy as np
 from chess import ChessGame
+from chess_oponent import ChessOponent
+from evaluator_MLP import MLPChessEvaluator
+from evaluator_CNN import CNNChessEvaluator
+
+oponent = 3
+player_white = True
 
 pygame.init()
 
@@ -16,21 +22,22 @@ chessboard = pygame.image.load('./images/chessboard.svg')
 chessboard = pygame.transform.scale(chessboard, screen_size)
 chessboard = pygame.transform.flip(chessboard, False, True)
 
+theme = 'theme_gpt'
 pieces = {}
 pieces[b'0'] = None
 pieces[b'x'] = pygame.image.load('./images/cancel.svg')
-pieces[b'k'] = pygame.image.load('./images/theme_gpt/black_king.png')
-pieces[b'q'] = pygame.image.load('./images/theme_gpt/black_queen.png')
-pieces[b'r'] = pygame.image.load('./images/theme_gpt/black_rook.png')
-pieces[b'b'] = pygame.image.load('./images/theme_gpt/black_bishop.png')
-pieces[b'n'] = pygame.image.load('./images/theme_gpt/black_knight.png')
-pieces[b'p'] = pygame.image.load('./images/theme_gpt/black_pawn.png')
-pieces[b'K'] = pygame.image.load('./images/theme_gpt/white_king.png')
-pieces[b'Q'] = pygame.image.load('./images/theme_gpt/white_queen.png')
-pieces[b'R'] = pygame.image.load('./images/theme_gpt/white_rook.png')
-pieces[b'B'] = pygame.image.load('./images/theme_gpt/white_bishop.png')
-pieces[b'N'] = pygame.image.load('./images/theme_gpt/white_knight.png')
-pieces[b'P'] = pygame.image.load('./images/theme_gpt/white_pawn.png')
+pieces[b'k'] = pygame.image.load('./images/' + theme + '/black_king.png')
+pieces[b'q'] = pygame.image.load('./images/' + theme + '/black_queen.png')
+pieces[b'r'] = pygame.image.load('./images/' + theme + '/black_rook.png')
+pieces[b'b'] = pygame.image.load('./images/' + theme + '/black_bishop.png')
+pieces[b'n'] = pygame.image.load('./images/' + theme + '/black_knight.png')
+pieces[b'p'] = pygame.image.load('./images/' + theme + '/black_pawn.png')
+pieces[b'K'] = pygame.image.load('./images/' + theme + '/white_king.png')
+pieces[b'Q'] = pygame.image.load('./images/' + theme + '/white_queen.png')
+pieces[b'R'] = pygame.image.load('./images/' + theme + '/white_rook.png')
+pieces[b'B'] = pygame.image.load('./images/' + theme + '/white_bishop.png')
+pieces[b'N'] = pygame.image.load('./images/' + theme + '/white_knight.png')
+pieces[b'P'] = pygame.image.load('./images/' + theme + '/white_pawn.png')
 for key in pieces:
     if pieces[key] is not None:
         pieces[key] = pygame.transform.smoothscale(pieces[key], (square_size, square_size))
@@ -56,7 +63,8 @@ promotion = {
     }
 }
 
-chessGame = ChessGame()
+chessGame = ChessGame(player_white)
+chessOponent = ChessOponent(oponent)
 board = chessGame.get_board()
 
 a_x = None
@@ -103,7 +111,7 @@ def mouse_down_promotion(board, piece_held, promotion, white, mouse_x, mouse_y):
         if white == False:
             option += 1
         choosen_piece = promotion['pieces'][white][option]
-        board = chessGame.move(piece_held['position_before'], piece_held['position_after'], choosen_piece)
+        board = chessGame.player_move(piece_held['position_before'], piece_held['position_after'], choosen_piece)
         white = chessGame.position.white_turn
         result = chessGame.is_check_mate()
         promotion['is_active'] = False
@@ -118,8 +126,8 @@ while run:
     mouse_column = mouse_x // square_size
     mouse_row = 7 - mouse_y // square_size
 
-    if (result == 0) and (promotion['is_active'] == False) and (chessGame.gpt_mode == True) and (chessGame.position.white_turn != chessGame.player_white):
-        board = chessGame.gpt_move()
+    if (result == 0) and (promotion['is_active'] == False) and (oponent != 0) and (chessGame.position.white_turn != chessGame.player_white):
+        board = chessOponent.oponent_move(chessGame)
         white = chessGame.position.white_turn
         result = chessGame.is_check_mate()
 
@@ -143,7 +151,7 @@ while run:
             promotion = update_promotion(piece_held, promotion, white, (b_x, b_y))
 
             if promotion['is_active'] == False:
-                board = chessGame.move((a_x, a_y), (b_x, b_y))
+                board = chessGame.player_move((a_x, a_y), (b_x, b_y))
                 white = chessGame.position.white_turn
                 result = chessGame.is_check_mate()
                 piece_held['code'] = b'0'

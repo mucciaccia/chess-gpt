@@ -4,12 +4,12 @@ from gpt_api import GptApi
 
 class ChessGame:
 
-    def __init__(self) -> None:
+    def __init__(self, player_white) -> None:
         self.position = ChessPosition()
         self.move_number = 0
         self.history = [self.position]
         self.move_history = []
-        self.player_white = True
+        self.player_white = player_white
         self.gpt_mode = True
 
     def is_white(piece):
@@ -98,14 +98,14 @@ class ChessGame:
         else:
             d = -1
 
-        move = (x, y + d)
-        if position.is_empty(move):
-            move_list.append(move)
-        move = (x, y + 2*d)
-        if white == True and y == 1 and position.is_empty(move):
-            move_list.append(move)
-        elif white == False and y == 6 and position.is_empty(move):
-            move_list.append(move)
+        move1 = (x, y + d)
+        if position.is_empty(move1):
+            move_list.append(move1)
+        move2 = (x, y + 2*d)
+        if (white == True) and (y == 1) and position.is_empty(move1) and position.is_empty(move2):
+            move_list.append(move2)
+        elif white == False and y == 6 and position.is_empty(move1) and position.is_empty(move2):
+            move_list.append(move2)
         move = (x - 1, y + d)
         if position.is_occupied_by_enemy(move, white):
             move_list.append(move)
@@ -135,6 +135,28 @@ class ChessGame:
                 move_list.append(move)
 
         return move_list
+    
+    def en_passant_movements(position : ChessPosition, coordinates):
+        if position.en_passant is None:
+            return []
+        
+        move_list = []
+
+        d = 1
+        (a_x, a_y) = coordinates
+        b_x = position.en_passant
+        b_y = a_y + d
+        
+        piece1 = position.get_piece((a_x, a_y))
+        piece2 = position.position.get_piece((b_x, a_y))
+
+        if (piece1 == b'P') and (piece2 == b'p') and (a_y == 4) and (b_y == 5) and (abs(a_x - b_x) == 1):
+            move_list.append((a_x, a_y), (b_x, b_y))
+        if (piece1 == b'p') and (piece2 == b'P') and (a_y == 3) and (b_y == 2) and (abs(a_x - b_x) == 1):
+            move_list.append((a_x, a_y), (b_x, b_y))
+
+        return False
+    
 
     def any_piece_movements(position : ChessPosition, coordinates, white):
         x, y = coordinates
@@ -466,6 +488,25 @@ class ChessGame:
         info += self.position.info()
         return info
 
+    def iso_move(self, a, b, promotion_piece = None):
+        is_valid = self.is_valid_move(a, b, promotion_piece)
+
+        if is_valid == False:
+            return self.position.board
+
+        self.position = self.execute_move(a, b, promotion_piece)
+
+        copy = self.position.copy()
+        self.history.append(copy)
+        self.move_history.append(self.to_long_algebraic_notation(a, b))
+
+        print(self.move_info(a, b, promotion_piece))
+
+        if self.is_check_mate() != 0:
+            print('Check Mate!!')
+
+        return self.position.board
+
     def player_move(self, a, b, promotion_piece = None):
         is_valid = self.is_valid_move(a, b, promotion_piece)
 
@@ -485,38 +526,6 @@ class ChessGame:
 
         return self.position.board
     
-    def gpt_move(self):
-
-        fen_str = self.position.to_FEN_notation()
-        move_history_str = "\n".join(self.move_history)
-        possible_moves_str = ""
-        for move in ChessGame.possible_moves(self.position):
-            a, b = move
-            possible_moves_str += self.to_long_algebraic_notation(a, b)
-            possible_moves_str += "\n"
-
-        valid = False
-        attempts = 3
-        while (valid == False) and (attempts > 0):
-            move_text = GptApi.move(fen_str, move_history_str, possible_moves_str)
-            (a, b) = self.from_long_algebraic_notation(move_text)
-            valid = self.is_valid_move(a, b, promotion_piece='q')
-            attempts -= 1
-        if valid == True:
-            self.player_move(a, b)
-        else:
-            print('Chat GPT made an invalid movement!')
-        return self.position.board
-
-    def move(self, a, b, promotion_piece = None):
-
-        if self.position.white_turn == self.player_white:
-            self.player_move(a, b, promotion_piece)
-        else:
-            self.gpt_move()
-        
-        return self.position.board
-
     def to_long_algebraic_notation(self, a, b):
         a_x, a_y = a
         b_x, b_y = b

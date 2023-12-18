@@ -3,12 +3,14 @@ import torch
 from chess import ChessGame
 from chess_position import ChessPosition
 from evaluator_MLP import MLPChessEvaluator
+from evaluator_CNN import CNNChessEvaluator
 from eval_reader import EvalReader
 
 class ChessEngine:
 
-    def __init__(self):
-        self.model = torch.load('./models/MLP.torch')
+    def __init__(self, model_path):
+        self.model = torch.load('./models/CNN.torch')
+        self.model = torch.load(model_path)
         self.eval = EvalReader()
 
     def evaluate(self, position: ChessPosition):
@@ -53,6 +55,19 @@ class ChessEngine:
             new_position = position.unrestricted_move(a, b)
             new_position.white_turn = not new_position.white_turn
             points = self.rmax(new_position, depth - 1)
+            if points > max:
+                max = points
+                best_move = move
+        return best_move
+    
+    def black_best_move(self, position : ChessPosition, depth : int):
+        best_move = None
+        max = 0
+        for move in ChessGame.possible_moves(position):
+            (a, b) = move
+            new_position = position.unrestricted_move(a, b)
+            new_position.white_turn = not new_position.white_turn
+            points = self.rmini(new_position, depth - 1)
             if points > max:
                 max = points
                 best_move = move
