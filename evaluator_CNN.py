@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 
 evalReader = EvalReader()
 
-x_train, y_train = evalReader.get_cnn(1000)
+x_train, y_train = evalReader.get_cnn(20000)
 x_test, y_test = evalReader.get_cnn(100)
 
 class CNNChessEvaluator(nn.Module):
