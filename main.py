@@ -5,7 +5,7 @@ from chess_oponent import ChessOponent
 from evaluator_MLP import MLPChessEvaluator
 from evaluator_CNN import CNNChessEvaluator
 
-oponent = 3
+oponent = 0
 player_white = True
 
 pygame.init()

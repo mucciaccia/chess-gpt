@@ -8,14 +8,18 @@ from eval_reader import EvalReader
 
 class ChessEngine:
 
-    def __init__(self, model_path):
-        self.model = torch.load('./models/CNN.torch')
+    def __init__(self, model_path, oponent):
         self.model = torch.load(model_path)
+        self.oponent = oponent
         self.eval = EvalReader()
 
     def evaluate(self, position: ChessPosition):
         fen_str = position.to_FEN_notation_2()
         tensor = EvalReader.fen_to_tensor(fen_str)
+        if self.oponent == 2:
+            tensor = tensor.reshape(768)
+        if self.oponent == 3:
+            tensor = tensor.permute(2, 0, 1).unsqueeze(dim=0)
         evaluation = self.model(tensor)
         return evaluation
 

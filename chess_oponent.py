@@ -10,9 +10,9 @@ class ChessOponent:
         self.player_white = False
         self.oponent = oponent
         if oponent == 2:
-            self.mlp_engine = ChessEngine('./models/MLP.torch')
+            self.mlp_engine = ChessEngine('./models/MLP.torch', oponent)
         if oponent == 3:
-            self.cnn_engine = ChessEngine('./models/CNN.torch')
+            self.cnn_engine = ChessEngine('./models/CNN.torch', oponent)
 
     def oponent_move(self, chessGame : ChessGame):
         board = chessGame.position.board
