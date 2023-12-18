@@ -36,9 +36,11 @@ Para treinar as redes é necessário fazer o download e descompactar o arquivo n
 Após isso é necessário descomentar as duas últimas linhas (dos dois scripts) e executar o script de treinamento
 
 Para a MLP:
+
     python3 evaluator_MLP.py
 
 E para a CNN:
+
     python3 evaluator_CNN.py
 
 
