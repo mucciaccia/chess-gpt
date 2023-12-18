@@ -20,6 +20,9 @@ No arquivo main.py as duas primeiras variáveis são oponent e player_white
     player_white=True     # O jogador joga com as peças brancas e o oponente com as pretas
     player_white=False    # O jogador joga com as peças pretas e o oponente com as brancas
 
+Observação: A profundidade do minimax está configurada como 1 para que os oponentes executem
+mais rápido. Porém as avaliações foram feitos com profundidade 7.
+
 # Para jogar contra o Chat GPT 4
 É necessário criar uma api key no site da open AI.
 Após isso, criar um arquivo com o nome "api_key.txt" na pasta principal do projeto
