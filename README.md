@@ -51,3 +51,8 @@ E para a CNN:
 Obs: A ideia é fazer por reinforcement learning no futuro, para que os programas aprendam jogando contra eles mesmos,
 após algumas tentativas percebi que isso é mais difícil que parece e acabei treinando os bots com dados de avaliação de 
 partidas do lichess.
+
+# Imagem de uma partida contra o Chat GPT
+
+![Image of game against ChatGPT](https://github.com/mucciaccia/chess-gpt/assets/26572954/d234fae3-899d-4a66-b120-bafcaf6038c9)
+
