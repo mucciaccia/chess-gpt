@@ -1,13 +1,21 @@
 import json
 import torch
+import os
 
 class EvalReader():
 
     def __init__(self):
-        self.file = open("./data/lichess_db_eval.json", "r")
+        self.file = None
+        file_path = "./data/lichess_db_eval.json"
+
+        if os.path.exists(file_path):
+            self.file = open(file_path, 'r')
+        else:
+            print(f"File '{file_path}' does not exist. Please, download it from the link https://database.lichess.org/lichess_db_eval.json.zst and extract in the contents the data folder.")
 
     def __del__(self):
-        self.file.close()
+        if self.file:
+            self.file.close()
 
     def piece_to_dimension(piece):
         dim = {
